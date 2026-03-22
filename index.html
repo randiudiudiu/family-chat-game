@@ -1,0 +1,2726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>家庭群聊求生指南</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #b2b2b2;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+}
+#app {
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Nav ── */
+.nav-bar {
+  background: #ededed;
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #d8d8d8;
+  flex-shrink: 0;
+}
+.nav-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+.nav-sub   { font-size: 11px; color: #999; margin-top: 1px; }
+
+/* ── Health ── */
+.health-wrap {
+  background: #fff;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+.health-label {
+  font-size: 12px; color: #666;
+  display: flex; justify-content: space-between;
+  margin-bottom: 5px;
+}
+.health-track {
+  background: #e0e0e0; border-radius: 4px; height: 7px; overflow: hidden;
+}
+.health-fill {
+  height: 100%; background: #e74c3c; border-radius: 4px;
+  transition: width 0.5s ease, background 0.5s ease;
+}
+
+/* ── Chat ── */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.system-msg {
+  text-align: center; font-size: 11px; color: #aaa;
+  padding: 2px 0; user-select: none;
+}
+.message-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  opacity: 0; animation: fadeIn 0.3s ease forwards;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.avatar {
+  width: 40px; height: 40px;
+  border-radius: 6px;
+  flex-shrink: 0; margin-top: 2px;
+  background-size: cover; background-position: center;
+  background-color: #ccc;
+}
+.msg-meta { flex:1; min-width:0; }
+.msg-name { font-size: 11px; color: #999; margin-bottom: 3px; }
+.msg-bubble {
+  background: #fff;
+  border-radius: 0 8px 8px 8px;
+  padding: 8px 11px;
+  font-size: 14px; line-height: 1.55; color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  display: inline-block; max-width: 100%;
+  word-break: break-word;
+}
+/* ── Video card ── */
+.video-card {
+  width: 220px; border-radius: 8px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  background: #111;
+}
+.video-thumb {
+  position: relative; width: 100%; height: 160px;
+  background-size: cover; background-position: center top;
+  background-color: #1a1a2e;
+}
+.video-caption {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 24px 8px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.65));
+  color: #fff; font-size: 13px; font-weight: 600; line-height: 1.4;
+}
+.video-play {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: #fff;
+}
+.video-footer {
+  background: #fff; padding: 6px 10px;
+  display: flex; align-items: center; gap: 5px;
+}
+.video-author { font-size: 11px; color: #888; }
+
+/* ── Article card ── */
+.article-card {
+  width: 220px; border-radius: 8px; overflow: hidden;
+  background: #fff; border: 1px solid #efefef;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  display: flex; align-items: stretch; padding: 10px;
+  gap: 8px;
+}
+.article-left { flex: 1; min-width: 0; }
+.article-title { font-size: 13px; font-weight: 500; color: #1a1a1a; line-height:1.4; margin-bottom:5px;
+  display: -webkit-box; -webkit-line-clamp:3; line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.article-source { font-size: 11px; color: #aaa; }
+.article-thumb {
+  width: 58px; height: 58px; flex-shrink:0;
+  border-radius: 4px; background-size:cover; background-position:center;
+  background-color: #e0e0e0; align-self: center;
+}
+
+/* ── Red packet ── */
+.red-packet {
+  width: 180px; border-radius: 10px; overflow: hidden;
+  background: linear-gradient(160deg, #e8271a, #c41a0f);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.rp-top {
+  padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+}
+.rp-icon { font-size: 28px; }
+.rp-text { color: #ffe0b2; font-size: 12px; line-height:1.4; }
+.rp-text strong { color: #fff; font-size: 14px; display:block; margin-bottom:2px; }
+.rp-bottom {
+  background: rgba(0,0,0,0.15); padding: 7px 14px;
+  color: #ffcc80; font-size: 11px; text-align: center;
+}
+
+/* ── Voice message ── */
+.voice-bubble {
+  background: #fff; border-radius: 0 8px 8px 8px;
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  min-width: 120px;
+}
+.voice-wave { font-size: 16px; color: #07c160; }
+.voice-dur  { font-size: 13px; color: #1a1a1a; font-weight:500; }
+
+/* ── Profile card ── */
+.profile-card {
+  width: 220px; border-radius: 8px; overflow: hidden;
+  background: #fff; border: 1px solid #e5e5e5;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.pc-main {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+}
+.pc-avatar-wrap {
+  width: 44px; height: 44px; border-radius: 6px;
+  background: #ccc; flex-shrink: 0;
+  background-size: cover; background-position: center;
+}
+.pc-info { flex: 1; min-width: 0; }
+.pc-name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+.pc-sub  { font-size: 11px; color: #aaa; margin-top: 2px; }
+.pc-divider { height: 1px; background: #f0f0f0; }
+.pc-detail {
+  padding: 7px 14px 10px;
+  font-size: 11px; color: #888; line-height: 1.5;
+}
+
+/* ── Notification banner (private message) ── */
+.notif-banner {
+  position: absolute;
+  top: 8px; left: 8px; right: 8px;
+  background: rgba(28,28,30,0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 250;
+  opacity: 0;
+  transform: translateY(-16px);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(.25,.8,.25,1);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
+.notif-banner.show {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+.notif-av {
+  width: 40px; height: 40px; border-radius: 8px;
+  background-size: cover; background-position: center;
+  background-color: #555; flex-shrink: 0;
+}
+.notif-body { flex: 1; min-width: 0; }
+.notif-from { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 3px; }
+.notif-msg  { font-size: 14px; color: #fff; line-height: 1.35; }
+
+/* ── Baby photo ── */
+.baby-photo {
+  width: 150px; height: 150px; border-radius: 8px;
+  background: #f0e6d3; display:flex; align-items:center; justify-content:center;
+  font-size: 52px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+/* ── Player bubble ── */
+.player-row {
+  display: flex; justify-content: flex-end;
+  opacity: 0; animation: fadeIn 0.3s ease forwards;
+}
+.player-bubble {
+  background: #95EC69;
+  border-radius: 8px 0 8px 8px;
+  padding: 8px 11px;
+  font-size: 14px; line-height: 1.55; color: #1a1a1a;
+  max-width: 72%; word-break: break-word;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.dmg-row    { text-align: right; padding: 0 4px; }
+.dmg-label  {
+  font-size: 11px; color: #e74c3c;
+  background: #fff0f0; border-radius: 4px;
+  padding: 2px 7px; display: inline-block;
+}
+
+/* ── Options ── */
+.options-area {
+  background: #ebebeb;
+  padding: 10px;
+  border-top: 1px solid #d8d8d8;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.opt-btn {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 9px;
+  font-size: 13px; color: #1a1a1a;
+  cursor: pointer; text-align: left; line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+.opt-btn:active { background: #f0f0f0; }
+.opt-btn.chosen { background: #e8f5e9; border-color: #07c160; pointer-events: none; }
+.opt-btn.disabled { background: #f5f5f5; color: #c0c0c0; pointer-events: none; }
+
+/* ── Start screen ── */
+.start-screen {
+  position: absolute; inset: 0;
+  background: #f0f0f0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 100; padding: 24px;
+}
+.start-card {
+  background: #fff; border-radius: 16px;
+  padding: 36px 28px; text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  width: 100%; max-width: 320px;
+}
+.start-card h1    { font-size: 20px; color: #1a1a1a; margin-bottom: 8px; }
+.start-card .sub  { font-size: 13px; color: #999; margin-bottom: 6px; }
+.start-card .hp   { font-size: 14px; color: #555; margin: 16px 0 24px; }
+.start-btn {
+  background: #07c160; color: #fff;
+  border: none; border-radius: 8px;
+  padding: 13px 0; font-size: 16px;
+  cursor: pointer; width: 100%;
+}
+.start-btn:active { background: #05a050; }
+
+/* ── Flash ── */
+.flash-red { animation: flashRed 0.45s ease; }
+@keyframes flashRed {
+  0%   { background: #f5f5f5; }
+  30%  { background: #ffd4d4; }
+  100% { background: #f5f5f5; }
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 200;
+}
+.modal-card {
+  background: #fff;
+  border-radius: 18px 18px 0 0;
+  padding: 26px 20px 36px;
+  width: 100%; max-width: 430px;
+  animation: slideUp 0.35s cubic-bezier(.25,.8,.25,1);
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.m-emoji { font-size: 52px; text-align: center; margin-bottom: 12px; }
+.m-title { font-size: 21px; font-weight: 700; text-align: center; color: #1a1a1a; margin-bottom: 6px; }
+.m-sub   { font-size: 13px; color: #888; text-align: center; margin-bottom: 8px; }
+.m-desc  { font-size: 13px; color: #666; text-align: center; line-height: 1.7; margin-bottom: 18px; }
+.m-stats {
+  background: #f7f7f7; border-radius: 10px;
+  padding: 13px 16px; font-size: 13px; color: #555;
+  line-height: 1.9; margin-bottom: 16px;
+}
+.m-stats strong { color: #1a1a1a; }
+.copy-btn {
+  background: #07c160; color: #fff;
+  border: none; border-radius: 9px;
+  padding: 13px; font-size: 15px;
+  cursor: pointer; width: 100%; margin-bottom: 10px;
+}
+.copy-btn:active { background: #05a050; }
+.retry-btn {
+  background: #fff; color: #666;
+  border: 1px solid #ddd; border-radius: 9px;
+  padding: 13px; font-size: 15px;
+  cursor: pointer; width: 100%;
+}
+.retry-btn:active { background: #f5f5f5; }
+.modal-close {
+  position: absolute; top: 14px; right: 16px;
+  background: none; border: none;
+  font-size: 20px; color: #bbb; cursor: pointer;
+  line-height: 1; padding: 2px 6px;
+}
+.modal-close:active { color: #888; }
+.modal-card { position: relative; }
+.result-fab {
+  position: absolute; bottom: 72px; right: 16px;
+  background: #07c160; color: #fff;
+  border: none; border-radius: 24px;
+  padding: 10px 16px; font-size: 13px; font-weight: 500;
+  cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  z-index: 150; display: none; white-space: nowrap;
+}
+.result-fab:active { background: #05a050; }
+
+/* ── Screen overlay (chat list / private chat) ── */
+.screen {
+  position: absolute; inset: 0;
+  background: #f5f5f5;
+  display: none; flex-direction: column;
+  z-index: 300;
+}
+.screen.active { display: flex; }
+
+/* ── Chapter transition ── */
+.chapter-transition {
+  position: absolute; inset: 0;
+  background: #000;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 400;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.chapter-transition.show { opacity: 1; }
+.ct-line1 { color: #fff; font-size: 22px; font-weight: 300; letter-spacing: 4px; }
+.ct-line2 { color: #999; font-size: 14px; margin-top: 10px; }
+
+/* ── Date scene ── */
+.date-scene {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(245,230,211,0.72), rgba(232,213,196,0.78)),
+    url('project/coffee.jpg') center/cover no-repeat;
+  display: none; flex-direction: column;
+  z-index: 300;
+}
+.date-scene.active { display: flex; }
+.date-location {
+  text-align: center; padding: 14px 16px 8px;
+  font-size: 13px; color: #8b7355;
+}
+.date-char-area {
+  display: flex; flex-direction: column;
+  align-items: center; padding: 24px 20px 16px;
+}
+.date-avatar {
+  width: 80px; height: 80px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  border: 3px solid rgba(255,255,255,0.8);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.date-name {
+  margin-top: 10px; font-size: 16px; font-weight: 600; color: #4a3728;
+}
+.date-hp {
+  margin-top: 8px; padding: 0 40px; width: 100%;
+}
+.date-dialogue {
+  background: rgba(255,255,255,0.85);
+  margin: 0 20px 12px; border-radius: 14px;
+  padding: 18px 20px;
+  min-height: 90px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.date-dialogue.narration { background: transparent; box-shadow: none; text-align: center; }
+.date-dialogue.narration .date-dlg-text { color: #8b7355; font-style: italic; font-size: 14px; }
+.date-dlg-speaker { font-size: 12px; color: #8b7355; margin-bottom: 6px; font-weight: 600; }
+.date-dlg-text { font-size: 15px; color: #333; line-height: 1.7; }
+.date-opt-area {
+  padding: 8px 12px 24px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ── Phone call scene ── */
+.call-scene {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: none; flex-direction: column; align-items: center;
+  z-index: 300;
+  color: #fff;
+}
+.call-scene.active { display: flex; }
+.call-status { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 48px; }
+.call-avatar {
+  width: 100px; height: 100px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  margin-top: 24px;
+  box-shadow: 0 0 40px rgba(255,255,255,0.08);
+}
+.call-name { font-size: 22px; font-weight: 300; margin-top: 14px; letter-spacing: 2px; }
+.call-timer { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.call-hp {
+  margin-top: 20px; padding: 0 50px; width: 100%;
+}
+.call-dialogue {
+  margin: auto 24px 16px;
+  font-size: 16px; color: rgba(255,255,255,0.9);
+  line-height: 1.8; text-align: center;
+  min-height: 80px;
+  display: flex; align-items: center; justify-content: center;
+}
+.call-dialogue.narration { color: rgba(255,255,255,0.45); font-size: 14px; font-style: italic; }
+.call-speaker { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 6px; text-align: center; }
+.call-opt-area {
+  padding: 8px 16px 32px; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.call-opt-area .opt-btn { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+.call-opt-area .opt-btn:active { background: rgba(255,255,255,0.2); }
+.call-opt-area .opt-btn.chosen { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); }
+.call-opt-area .opt-btn.disabled { opacity: 0.3; }
+/* Incoming call buttons */
+.call-actions { display: flex; gap: 60px; margin-top: auto; margin-bottom: 60px; }
+.call-btn {
+  width: 64px; height: 64px; border-radius: 50%; border: none;
+  font-size: 28px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.call-btn-accept { background: #4cd964; }
+.call-btn-decline { background: #ff3b30; }
+.call-btn-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; text-align: center; }
+
+/* ── Home visit scene ── */
+.home-scene {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(240,235,227,0.7), rgba(232,224,212,0.75)),
+    url('project/chuzuwu.webp') center/cover no-repeat;
+  display: none; flex-direction: column;
+  z-index: 300;
+  transition: background-image 0.6s ease;
+}
+.home-scene.active { display: flex; }
+.home-location { text-align: center; padding: 14px 16px 4px; font-size: 13px; color: #8b7355; }
+.home-chars {
+  display: flex; justify-content: center; gap: 24px; padding: 20px 20px 8px;
+}
+.home-char {
+  display: flex; flex-direction: column; align-items: center;
+}
+.home-char-av {
+  width: 56px; height: 56px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  border: 2px solid rgba(255,255,255,0.8);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.home-char-name { font-size: 11px; color: #8b7355; margin-top: 6px; }
+.home-char.speaking .home-char-av { border-color: #e67e22; box-shadow: 0 0 12px rgba(230,126,34,0.3); }
+.home-hp { padding: 12px 40px 0; }
+.home-dialogue {
+  background: rgba(255,255,255,0.85);
+  margin: auto 20px 12px; border-radius: 14px;
+  padding: 18px 20px;
+  min-height: 90px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.home-dialogue.narration { background: transparent; box-shadow: none; text-align: center; }
+.home-dialogue.narration .home-dlg-text { color: #8b7355; font-style: italic; font-size: 14px; }
+.home-dlg-speaker { font-size: 12px; color: #e67e22; margin-bottom: 6px; font-weight: 600; }
+.home-dlg-text { font-size: 15px; color: #333; line-height: 1.7; }
+.home-opt-area {
+  padding: 8px 12px 24px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+
+/* ── Chat list ── */
+.cl-list { flex: 1; overflow-y: auto; }
+.cl-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; background: #fff;
+  border-bottom: 1px solid #f2f2f2; cursor: pointer;
+}
+.cl-row:active { background: #f0f0f0; }
+.cl-av {
+  width: 48px; height: 48px; border-radius: 8px;
+  background-size: cover; background-position: center;
+  background-color: #ccc; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.cl-body { flex: 1; min-width: 0; }
+.cl-top  { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+.cl-name { font-size: 16px; color: #1a1a1a; font-weight: 500; }
+.cl-time { font-size: 12px; color: #aaa; }
+.cl-preview { font-size: 13px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cl-badge {
+  background: #e74c3c; color: #fff; border-radius: 50%;
+  width: 18px; height: 18px; font-size: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+/* ── Nav back button ── */
+.nav-back {
+  background: none; border: none; font-size: 26px; color: #1a1a1a;
+  cursor: pointer; padding: 0 8px 0 0; line-height: 1; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Start Screen -->
+  <div class="start-screen" id="startScreen">
+    <div class="start-card">
+      <div style="font-size:44px;margin-bottom:14px">🏠</div>
+      <h1>家庭群聊求生指南</h1>
+      <div class="sub">你有 <strong>1</strong> 条新消息</div>
+      <div class="hp">心理防线：<strong>100%</strong></div>
+      <button class="start-btn" onclick="startGame()">开始接收消息</button>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav-bar">
+    <button class="nav-back" onclick="showChatList()">‹</button>
+    <div style="flex:1">
+      <div class="nav-title">🏠 家庭群 (5)</div>
+      <div class="nav-sub">妈妈、高山流水、刘秀英、王秀珍、张建国</div>
+    </div>
+  </div>
+
+  <!-- Health -->
+  <div class="health-wrap">
+    <div class="health-label">
+      <span>心理防线</span>
+      <span id="hpText">100%</span>
+    </div>
+    <div class="health-track">
+      <div class="health-fill" id="hpFill" style="width:100%"></div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-area" id="chatArea">
+    <div class="system-msg">以下是「家庭群」的聊天记录</div>
+  </div>
+
+  <!-- Options -->
+  <div class="options-area" id="optArea"></div>
+
+  <!-- Ending Modal -->
+  <div class="modal-overlay" id="endModal" style="display:none">
+    <div class="modal-card" id="endCard"></div>
+  </div>
+
+  <!-- Floating result button (shown when modal is dismissed) -->
+  <button class="result-fab" id="resultFab" onclick="showResultModal()">📊 查看结果</button>
+
+  <!-- Chat List Screen -->
+  <div class="screen" id="chatListScreen">
+    <div class="nav-bar" style="justify-content:center">
+      <div class="nav-title">微信</div>
+    </div>
+    <div class="cl-list" id="chatListBody"></div>
+  </div>
+
+  <!-- Private Chat Screen -->
+  <div class="screen" id="privateChatScreen">
+    <div class="nav-bar">
+      <button class="nav-back" onclick="backFromPrivate()">‹</button>
+      <div style="flex:1;text-align:center">
+        <div class="nav-title" id="privateChatTitle"></div>
+      </div>
+      <div style="width:44px"></div>
+    </div>
+    <div class="chat-area" id="privateMsgArea"></div>
+    <div class="options-area" id="privateOptArea"></div>
+  </div>
+
+  <!-- Home Visit Scene -->
+  <div class="home-scene" id="homeScreen">
+    <div class="home-location" id="homeLocation">🏠 你的出租屋</div>
+    <div class="home-chars">
+      <div class="home-char" id="homeCharMom">
+        <div class="home-char-av" id="homeMomAv"></div>
+        <div class="home-char-name">妈妈</div>
+      </div>
+      <div class="home-char" id="homeCharDad">
+        <div class="home-char-av" id="homeDadAv"></div>
+        <div class="home-char-name">爸爸</div>
+      </div>
+    </div>
+    <div class="home-hp">
+      <div class="health-wrap" style="background:rgba(255,255,255,0.6);border:none;border-radius:8px">
+        <div class="health-label"><span>心理防线</span><span id="homeHpText"></span></div>
+        <div class="health-track"><div class="health-fill" id="homeHpFill"></div></div>
+      </div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="home-dialogue" id="homeDlg">
+      <div class="home-dlg-speaker" id="homeSpeaker"></div>
+      <div class="home-dlg-text" id="homeText"></div>
+    </div>
+    <div class="home-opt-area" id="homeOptArea"></div>
+  </div>
+
+  <!-- Phone Call Scene -->
+  <div class="call-scene" id="callScreen">
+    <div class="call-status" id="callStatus">来电</div>
+    <div class="call-avatar" id="callAvatar"></div>
+    <div class="call-name" id="callName"></div>
+    <div class="call-timer" id="callTimer"></div>
+    <div class="call-hp">
+      <div class="health-wrap" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px">
+        <div class="health-label" style="color:rgba(255,255,255,0.4)"><span>心理防线</span><span id="callHpText"></span></div>
+        <div class="health-track" style="background:rgba(255,255,255,0.1)"><div class="health-fill" id="callHpFill"></div></div>
+      </div>
+    </div>
+    <div class="call-dialogue" id="callDlg"></div>
+    <div class="call-opt-area" id="callOptArea"></div>
+  </div>
+
+  <!-- Chapter Transition -->
+  <div class="chapter-transition" id="chapterTransition">
+    <div class="ct-line1"></div>
+    <div class="ct-line2"></div>
+  </div>
+
+  <!-- Date Scene -->
+  <div class="date-scene" id="dateScreen">
+    <div class="date-location">📍 漫咖啡 · 国贸店</div>
+    <div class="date-char-area" id="dateCharArea">
+      <div class="date-avatar" id="dateAvatar"></div>
+      <div class="date-name" id="dateName"></div>
+    </div>
+    <div class="date-hp">
+      <div class="health-wrap" style="background:rgba(255,255,255,0.6);border:none;border-radius:8px">
+        <div class="health-label"><span>心理防线</span><span id="dateHpText"></span></div>
+        <div class="health-track"><div class="health-fill" id="dateHpFill"></div></div>
+      </div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="date-dialogue" id="dateDlg">
+      <div class="date-dlg-speaker" id="dateSpeaker"></div>
+      <div class="date-dlg-text" id="dateText"></div>
+    </div>
+    <div class="date-opt-area" id="dateOptArea"></div>
+  </div>
+
+</div>
+<script>
+// ─────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────
+const C = {
+  mom:    { name:'妈妈❤️',       img:'https://b0.bdstatic.com/7e538cab174b776518ad6443e2ba48bd.jpg' },
+  dad:    { name:'高山流水（爸爸）', img:'https://pic.rmb.bdstatic.com/bjh/news/7cfee7ef2f094432e02fda21349f7d7f.png' },
+  aunt:   { name:'刘秀英（大姑）',  img:'https://nimg.ws.126.net/?url=http%3A%2F%2Fdingyue.ws.126.net%2F2025%2F0701%2Ff0e80210j00syq5bl004ld000sg00sgm.jpg&thumbnail=660x2147483647&quality=80&type=jpg' },
+  grandma:{ name:'王秀珍（奶奶）',  img:'https://p5.itc.cn/q_70/images03/20201016/87b252981f1e45dab0f16aafa8345dad.jpeg' },
+  uncle:  { name:'张建国（二舅）',  img:'https://nimg.ws.126.net/?url=http%3A%2F%2Fdingyue.ws.126.net%2F2025%2F0701%2Fa250fe92j00syq5bm0053d000sg00sgm.jpg&thumbnail=660x2147483647&quality=80&type=jpg' },
+  date:   { name:'王浩',           img:'project/wanghao.png' },
+};
+
+// ─── NODE GRAPH（分支式剧情）───
+// 每个节点有唯一 id，每个选项有 next 指向下一节点
+// 选项态度标签：comply=顺从 deflect=转移 resist=反抗 argue=硬刚
+const NODES = {
+
+// ══════════════════════════════════════
+// 第一轮：开胃菜
+// ══════════════════════════════════════
+r1_open: {
+  round:1, who:'mom', type:'text',
+  text:'宝，最近忙不忙？吃饭了吗',
+  opts:[
+    { t:'挺好的，你们也注意身体',      dmg:2,  next:'r1_friend', attitude:'comply'  },
+    { t:'还行，项目有点多',            dmg:2,  next:'r1_friend', attitude:'deflect' },
+    { t:'妈，你突然问这个干嘛',        dmg:5,  next:'r1_friend', attitude:'resist'  },
+    { t:'[已读不回]',                  dmg:10, next:'r1_friend_flood', attitude:'ignore', note:'妈妈连发三条消息……' },
+  ]
+},
+
+r1_friend: {
+  round:1, who:'mom', type:'text',
+  text:'吃饭要按时啊。对了——最近有没有认识什么新朋友？',
+  opts:[
+    { t:'同事朋友挺多的',              dmg:4,  next:'r1_rp', attitude:'comply'  },
+    { t:'最近忙，没怎么出去',          dmg:3,  next:'r1_rp', attitude:'deflect' },
+    { t:'妈，你说的是哪种朋友～',      dmg:1,  next:'r1_rp', attitude:'resist', note:'反将一军！妈妈停顿了两秒' },
+    { t:'妈我不想聊这个',              dmg:16, next:'r1_rp_guilt', attitude:'argue', reaction:{who:'mom', text:'你这孩子，妈还不能问你了？'} },
+  ]
+},
+
+r1_friend_flood: {
+  round:1, who:'mom', type:'multi',
+  lines:[
+    { who:'mom', text:'？' },
+    { who:'mom', text:'宝你看到了吗' },
+    { who:'mom', text:'就问你个问题……' },
+  ],
+  opts:[
+    { t:'妈，看到了，在忙',            dmg:6,  next:'r1_rp', attitude:'comply'  },
+    { t:'妈我手机没信号',              dmg:4,  next:'r1_rp', attitude:'deflect', note:'借口找得还挺快' },
+    { t:'一直在看，没啥好回的',        dmg:18, next:'r1_rp_guilt', attitude:'argue', reaction:{who:'mom', text:'行，知道了……'} },
+  ]
+},
+
+r1_rp_guilt: {
+  round:1, who:'mom', type:'text',
+  text:'妈不是要跟你吵。就是你一个人在外面，妈睡不着觉……',
+  opts:[
+    { t:'妈，我知道了，对不起',        dmg:5,  next:'r1_rp', attitude:'comply'  },
+    { t:'妈别这样，我很好的',          dmg:6,  next:'r1_rp', attitude:'deflect' },
+    { t:'你们睡不着是你们的问题',      dmg:25, next:'r1_rp', attitude:'argue', reaction:{who:'mom', text:'……行，我不说了'} },
+  ]
+},
+
+r1_rp: {
+  round:1, who:'mom', type:'redpacket',
+  note:'先领红包，领了再说',
+  opts:[
+    { t:'🧧 领取红包', dmg:3, next:'r1_video', note:'你欠了一份人情……' },
+    { t:'不领',        dmg:3, next:'r1_video', reaction:{who:'mom', text:'这孩子，连红包都不要了'} },
+  ]
+},
+
+r1_video: {
+  round:1, who:'uncle', type:'video',
+  title:'不婚不育的年轻人，十年后都后悔了',
+  author:'知识爆炸视频号',
+  img:'https://b0.bdstatic.com/ugc/o5xW7lzf_X3Kj4R0oN9g8w6bfe9638c7311e311924a25b61493c64.jpg',
+  opts:[
+    { t:'哈哈，收到了二舅',            dmg:2,  next:'r1_r2_bridge', attitude:'deflect' },
+    { t:'[划走了]',                    dmg:6,  next:'r1_r2_bridge', attitude:'ignore', note:'大姑跟着点了个赞' },
+    { t:'这种视频数据不准确吧',        dmg:10, next:'r1_r2_bridge', attitude:'resist', reaction:{who:'uncle', text:'你懂还是专家懂？'} },
+    { t:'二舅说得对，回头看看',        dmg:4,  next:'r1_r2_bridge', attitude:'comply' },
+  ]
+},
+
+// ── 过渡：群里其他人也在看 ──
+r1_r2_bridge: {
+  round:1, who:null, type:'ally',
+  lines:[
+    { who:'aunt',    text:'这个视频好！转了' },
+    { who:'grandma', text:'发我看看' },
+    { who:'uncle',   text:'妈我发你私信' },
+  ],
+  restore: 0,
+  note:'—— 大家在群里闲聊，暂时忘了你 ——',
+  next:'r2_aunt_open',
+},
+
+// ══════════════════════════════════════
+// 第二轮：火力全开
+// ══════════════════════════════════════
+r2_aunt_open: {
+  round:2, who:'aunt', type:'text',
+  text:'对了宝！说到这个——你表姐上个月生了，孩子可可爱了！你自己什么时候也打算打算呀',
+  opts:[
+    { t:'表姐孩子叫什么名啊？',        dmg:2,  next:'r2_profile', attitude:'deflect', note:'转移话题+1' },
+    { t:'还早呢，先把工作稳一稳',      dmg:6,  next:'r2_profile', attitude:'deflect' },
+    { t:'感情的事急不来嘛',            dmg:10, next:'r2_profile', attitude:'resist', reaction:{who:'aunt', text:'不急？你多大了！'} },
+    { t:'姑，我现在真没这个想法',      dmg:18, next:'r2_profile_angry', attitude:'argue', reaction:{who:'aunt', text:'你这孩子是真的不让我省心'} },
+  ]
+},
+
+r2_profile: {
+  round:2, who:'aunt', type:'profile',
+  text:'大姑这边正好有个条件不错的，你看看？',
+  pName:'王某某', age:29, job:'体制内', height:178, edu:'本科', pNote:'人很老实',
+  opts:[
+    { t:'我考虑考虑',                  dmg:5,  next:'r2_mom_article', attitude:'comply', note:'大姑已经开始约周六了……' },
+    { t:'先发我详细资料吧',            dmg:8,  next:'r2_mom_article', attitude:'comply', reaction:{who:'aunt', text:'好！这周六有空吗！'} },
+    { t:'姑，不太合适',                dmg:15, next:'r2_mom_article', attitude:'resist', reaction:{who:'aunt', text:'你条件有多好你知道吗'} },
+    { t:'姑你不用帮我操心这个',        dmg:22, next:'r2_profile_blowup', attitude:'argue', reaction:{who:'aunt', text:'行！我不管了！'} },
+  ]
+},
+
+r2_profile_angry: {
+  round:2, who:'aunt', type:'text',
+  text:'大姑就是想帮你，你什么态度',
+  opts:[
+    { t:'姑对不起，我不是那个意思',    dmg:8,  next:'r2_mom_article', attitude:'comply' },
+    { t:'姑我只是想自己决定',          dmg:12, next:'r2_mom_article', attitude:'resist' },
+    { t:'[已读不回]',                  dmg:18, next:'r2_mom_article', attitude:'ignore', note:'群里沉默了三分钟' },
+  ]
+},
+
+r2_profile_blowup: {
+  round:2, who:'mom', type:'text',
+  text:'你怎么跟你大姑说话的！她一片好心！',
+  opts:[
+    { t:'妈，对不起……',               dmg:10, next:'r2_mom_article', attitude:'comply' },
+    { t:'妈我没有凶她',                dmg:14, next:'r2_mom_article', attitude:'resist' },
+    { t:'为我好就要管我婚姻？',        dmg:28, next:'r2_mom_article', attitude:'argue', reaction:{who:'mom', text:'你……你说什么！！'} },
+  ]
+},
+
+r2_mom_article: {
+  round:2, who:'mom', type:'article',
+  title:'医学研究：女性最佳生育年龄只有这几年',
+  source:'健康时报',
+  img:'https://4g.fyfybjyy.com/upload/image/20250311/20250311085545_89084.jpg',
+  opts:[
+    { t:'收到了妈',                    dmg:3,  next:'r2_uncle_article', attitude:'comply' },
+    { t:'妈，我去忙了',                dmg:7,  next:'r2_uncle_article', attitude:'deflect' },
+    { t:'妈这文章是谣言吧',            dmg:15, next:'r2_uncle_article', attitude:'resist', reaction:{who:'mom', text:'你懂还是专家懂？'} },
+    { t:'妈你转这种文章干嘛……',        dmg:6,  next:'r2_uncle_article', attitude:'deflect' },
+  ]
+},
+
+r2_uncle_article: {
+  round:2, who:'uncle', type:'article',
+  title:'不结婚真的好吗？年过三十想清楚了吗',
+  source:'今日头条',
+  img:'https://pics1.baidu.com/feed/a5c27d1ed21b0ef42d34efbdb3f5bfca80cb3e32.jpeg@f_auto?token=4dfc5ea0995b47e9b769e086b46166cf',
+  opts:[
+    { t:'哈哈，收到了二舅',            dmg:2,  next:'r2_ally', attitude:'comply' },
+    { t:'[已读不回]',                  dmg:6,  next:'r2_ally', attitude:'ignore', note:'二舅又转发了一条视频号' },
+    { t:'这种文章不可信吧',            dmg:12, next:'r2_ally', attitude:'resist', reaction:{who:'uncle', text:'你懂还是专家懂？'} },
+    { t:'二舅你也来？',                dmg:16, next:'r2_ally', attitude:'argue', reaction:{who:'uncle', text:'二舅是好意！'} },
+  ]
+},
+
+r2_ally: {
+  round:2, who:null, type:'ally',
+  lines:[{ who:'aunt', text:'哎对了！你表妹说要带男朋友回来了！多大了来着？' }],
+  restore: 20,
+  note:'🛡️ 话题转移！表妹的大新闻暂时解了围  +20 心理防线',
+  next:'r2_dad',
+},
+
+r2_dad: {
+  round:2, who:'dad', type:'text',
+  text:'你妈说的对。听话。',
+  opts:[
+    { t:'好的爸，我知道了',            dmg:8,  next:'r2_r3_bridge', attitude:'comply' },
+    { t:'……爸',                        dmg:14, next:'r2_r3_bridge', attitude:'ignore', note:'沉默的父爱，最致命' },
+    { t:'爸，支持我就行了',            dmg:12, next:'r2_r3_bridge', attitude:'resist' },
+    { t:'爸你也这样',                  dmg:22, next:'r2_r3_bridge', attitude:'argue', reaction:{who:'dad', text:'……'} },
+  ]
+},
+
+// ── 过渡：群暂时安静一会儿 ──
+r2_r3_bridge: {
+  round:2, who:null, type:'ally',
+  lines:[
+    { who:'mom',   text:'好了好了，都吃饭去吧' },
+    { who:'uncle', text:'[撤回了一条消息]' },
+  ],
+  restore: 5,
+  note:'—— 群聊安静下来，但你知道还没结束 ——',
+  next:'r3_voice',
+},
+
+// ══════════════════════════════════════
+// 第三轮：Boss 战
+// ══════════════════════════════════════
+r3_voice: {
+  round:3, who:'grandma', type:'voice',
+  duration:60,
+  opts:[
+    { t:'🔊 听完',                     dmg:10, next:'r3_grandma', note:'（奶奶哭着说，她就这一个心愿……）' },
+    { t:'划走，没听',                  dmg:12, next:'r3_grandma', note:'你会内疚很久' },
+  ]
+},
+
+r3_grandma: {
+  round:3, who:'grandma', type:'text',
+  text:'奶奶就这一个心愿，想在闭眼前抱上重孙子……',
+  opts:[
+    { t:'奶奶你能长命百岁的！',        dmg:6,  next:'r3_baby', attitude:'comply' },
+    { t:'奶奶我尽量……',               dmg:5,  next:'r3_baby', attitude:'comply' },
+    { t:'[泪目表情]',                  dmg:15, next:'r3_baby', attitude:'ignore' },
+    { t:'奶奶，我有我自己的人生',      dmg:28, next:'r3_baby', attitude:'argue', reaction:{who:'grandma', text:'……奶奶不说了'} },
+  ]
+},
+
+r3_baby: {
+  round:3, who:'aunt', type:'baby',
+  img:'project/baby.jpeg',
+  text:'你表姐让我发的，瞧瞧这大眼睛！',
+  opts:[
+    { t:'好可爱啊！',                  dmg:3,  next:'r3_private', attitude:'comply' },
+    { t:'哈哈太可爱了',                dmg:2,  next:'r3_private', attitude:'comply' },
+    { t:'[已读]',                      dmg:10, next:'r3_private', attitude:'ignore' },
+    { t:'（假笑）好看好看',            dmg:5,  next:'r3_private', attitude:'deflect' },
+  ]
+},
+
+r3_private: {
+  round:3, who:'dad', type:'private',
+  text:'你妈最近睡不着觉。',
+  opts:[
+    { t:'我知道了爸',                  dmg:12, next:'r3_finale' },
+    { t:'爸，我会注意的',              dmg:12, next:'r3_finale' },
+    { t:'……',                         dmg:15, next:'r3_finale' },
+    { t:'爸你放心',                    dmg:12, next:'r3_finale' },
+    { t:'[未回复]',                    dmg:20, next:'r3_finale', note:'爸爸沉默了很久' },
+  ]
+},
+
+r3_finale: {
+  round:3, who:null, type:'multi',
+  lines:[
+    { who:'mom',   text:'宝，你就考虑一下嘛' },
+    { who:'aunt',  text:'就是就是' },
+    { who:'uncle', text:'[转发了一条视频号]' },
+    { who:'dad',   text:'嗯' },
+  ],
+  opts:[
+    { t:'好的好的，我知道了！',        dmg:8,  next:null, attitude:'comply' },
+    { t:'我先去忙了……',               dmg:4,  next:null, attitude:'deflect', note:'逃跑成功，但下次攻势更猛' },
+    { t:'你们能不能别催我了！！',      dmg:30, next:null, attitude:'argue', reaction:{who:'mom', text:'你这孩子……'} },
+    { t:'[退出群聊]',                  dmg:0,  next:null, special:'quit' },
+  ]
+},
+
+// ══════════════════════════════════════
+// Chapter 1→2 桥接节点
+// ══════════════════════════════════════
+ch1_bridge_date: {
+  round:3, who:'aunt', type:'text',
+  text:'对了宝，周六下午有空吗？姑帮你约了个人见见',
+  opts:[
+    { t:'好吧……去看看',            dmg:3,  next:'ch2_date_arrive', attitude:'comply',  transition:{l1:'三天后……',l2:'周六下午'} },
+    { t:'姑我再想想',              dmg:2,  next:'ch2_date_arrive', attitude:'deflect', transition:{l1:'三天后……',l2:'周六下午'}, reaction:{who:'aunt', text:'想什么想！去就完了！'} },
+    { t:'我不想去',                dmg:8,  next:'ch2_date_arrive', attitude:'resist',  transition:{l1:'三天后……',l2:'周六下午（你还是来了）'}, reaction:{who:'mom', text:'去吧，去了再说'} },
+  ]
+},
+
+ch1_bridge_call: {
+  round:3, who:'mom', type:'text',
+  text:'算了不说了，你自己想想吧',
+  opts:[
+    { t:'妈……',                    dmg:5,  next:'ch2_call_ring', attitude:'comply',  transition:{l1:'当天深夜……',l2:'23:47'} },
+    { t:'（关掉手机）',            dmg:3,  next:'ch2_call_ring', attitude:'ignore',  transition:{l1:'当天深夜……',l2:'23:47'} },
+    { t:'我有什么好想的',          dmg:10, next:'ch2_call_ring', attitude:'argue',   transition:{l1:'当天深夜……',l2:'23:47'}, reaction:{who:'mom', text:'你！！'} },
+  ]
+},
+
+ch1_bridge_home: {
+  round:3, who:'mom', type:'text',
+  text:'你爸说明天想去看看你',
+  opts:[
+    { t:'来吧，我收拾一下',        dmg:2,  next:'ch2_home_arrive', attitude:'comply',  transition:{l1:'第二天……',l2:'周日上午'} },
+    { t:'不用了吧，大老远的',      dmg:3,  next:'ch1_bridge_home2', attitude:'deflect', reaction:{who:'dad', text:'不远，高铁两小时'} },
+    { t:'[已读不回]',              dmg:8,  next:'ch2_home_arrive', attitude:'ignore',  transition:{l1:'第二天……',l2:'周日上午'} },
+  ]
+},
+
+ch1_bridge_home2: {
+  round:3, who:'mom', type:'text',
+  text:'就看看你，又不干嘛。你收拾一下就行',
+  opts:[
+    { t:'那好吧',                   dmg:2, next:'ch2_home_arrive', attitude:'comply',  transition:{l1:'第二天……',l2:'周日上午'} },
+    { t:'真的不用……',              dmg:3, next:'ch2_home_arrive', attitude:'deflect', transition:{l1:'第二天……',l2:'周日上午（他们还是来了）'} },
+    { t:'[已读不回]',              dmg:6, next:'ch2_home_arrive', attitude:'ignore',  transition:{l1:'第二天……',l2:'周日上午'} },
+  ]
+},
+
+// ══════════════════════════════════════
+// Chapter 2：相亲局
+// ══════════════════════════════════════
+ch2_date_arrive: {
+  round:4, scene:'date', who:null, type:'vn',
+  text:'你到了约定的漫咖啡。\n角落里一个穿白衬衫的男生看到你，站起来尴尬地招了招手。',
+  opts:[
+    { t:'微笑走过去',              dmg:2,  next:'ch2_date_intro', attitude:'comply' },
+    { t:'硬着头皮走过去',          dmg:3,  next:'ch2_date_intro', attitude:'deflect' },
+    { t:'（想转身走）来都来了…',   dmg:5,  next:'ch2_date_intro', attitude:'resist' },
+  ]
+},
+
+ch2_date_intro: {
+  round:4, scene:'date', who:'date', type:'vn',
+  text:'你好你好！我叫王浩。刘姐跟我提过你，说你特别优秀。',
+  opts:[
+    { t:'你好，她都说了什么呀',    dmg:2,  next:'ch2_date_work', attitude:'deflect' },
+    { t:'你好你好，别听她的',      dmg:2,  next:'ch2_date_work', attitude:'comply' },
+    { t:'哈哈她肯定夸张了',        dmg:1,  next:'ch2_date_work', attitude:'deflect' },
+    { t:'（尴尬微笑）嗯…',        dmg:4,  next:'ch2_date_work', attitude:'ignore' },
+  ]
+},
+
+ch2_date_work: {
+  round:4, scene:'date', who:'date', type:'vn',
+  text:'听说你在互联网公司？加班多吗？',
+  opts:[
+    { t:'还好，最近不太忙',        dmg:2,  next:'ch2_date_hobby', attitude:'comply' },
+    { t:'996的那种（苦笑）',       dmg:3,  next:'ch2_date_hobby', attitude:'deflect', reaction:{who:'date', text:'那确实辛苦……我体制内倒是准点下班'} },
+    { t:'你呢，体制内是不是很闲',  dmg:5,  next:'ch2_date_hobby', attitude:'resist' },
+    { t:'不太想聊工作',            dmg:8,  next:'ch2_date_hobby', attitude:'argue' },
+  ]
+},
+
+ch2_date_hobby: {
+  round:4, scene:'date', who:'date', type:'vn',
+  text:'平时下班喜欢做什么呀？',
+  notification: { who:'aunt', text:'怎么样了！帅不帅！快告诉姑！' },
+  opts:[
+    { t:'看看书，偶尔出去走走',    dmg:2,  next:'ch2_date_marriage', attitude:'comply' },
+    { t:'加班算爱好吗（笑）',      dmg:1,  next:'ch2_date_marriage', attitude:'deflect', note:'气氛轻松了一点' },
+    { t:'最近在追剧打游戏',        dmg:3,  next:'ch2_date_marriage', attitude:'deflect', reaction:{who:'date', text:'哈哈我也是！最近在打什么？'} },
+    { t:'（看了眼手机）不好意思，我大姑发消息', dmg:6, next:'ch2_date_marriage', attitude:'ignore' },
+  ]
+},
+
+ch2_date_marriage: {
+  round:4, scene:'date', who:'date', type:'vn',
+  text:'那个……刘姐跟你说了吧，其实我家里也一直在催。你对这个事怎么看？',
+  opts:[
+    { t:'嗯，家里都差不多（叹气）', dmg:5,  next:'ch2_date_polite', attitude:'comply' },
+    { t:'顺其自然吧',              dmg:4,  next:'ch2_date_polite', attitude:'deflect' },
+    { t:'说实话我现在不太想考虑',  dmg:8,  next:'ch2_date_honest', attitude:'resist' },
+    { t:'所以你是因为家里催才来的？', dmg:12, next:'ch2_date_honest', attitude:'argue' },
+  ]
+},
+
+ch2_date_honest: {
+  round:4, scene:'date', who:'date', type:'vn',
+  text:'（他放下咖啡杯，苦笑了一下）\n其实……我也是来交差的。我妈说不来就断生活费。',
+  opts:[
+    { t:'哈哈，那咱俩都是演员',    dmg:0,  next:'ch2_date_bond', attitude:'deflect', restore:10, note:'🛡️ 意外同盟！你们开始吐槽各自家长  +10 心理防线' },
+    { t:'那干嘛还来呢',            dmg:3,  next:'ch2_date_ending', attitude:'resist' },
+    { t:'至少咖啡还不错',          dmg:2,  next:'ch2_date_bond', attitude:'deflect' },
+  ]
+},
+
+ch2_date_polite: {
+  round:4, scene:'date', who:'date', type:'vn',
+  text:'那挺好的。我妈也说趁年轻。对了，你喜欢孩子吗？',
+  opts:[
+    { t:'还行吧，以后的事以后说',  dmg:5,  next:'ch2_date_ending', attitude:'deflect' },
+    { t:'嗯，挺喜欢的',            dmg:8,  next:'ch2_date_ending', attitude:'comply', note:'你都不知道自己在说什么了' },
+    { t:'（有点窒息）能换个话题吗', dmg:10, next:'ch2_date_ending', attitude:'resist', reaction:{who:'date', text:'好好好，抱歉抱歉'} },
+  ]
+},
+
+ch2_date_bond: {
+  round:4, scene:'date', who:null, type:'vn',
+  text:'你们聊了四十分钟家长催婚的离谱经历，笑到咖啡都凉了。\n这大概是今天唯一轻松的时刻。',
+  opts:[
+    { t:'（继续）',                 dmg:0,  next:'ch2_date_ending' },
+  ]
+},
+
+ch2_date_ending: {
+  round:4, scene:'date', who:'date', type:'vn',
+  text:'今天聊得挺开心的。那个……方便加个微信吗？',
+  notification: { who:'aunt', text:'加了没有！加了没有！' },
+  opts:[
+    { t:'好啊，扫我吧',            dmg:5,  next:'ch2_date_wrapup_good', attitude:'comply', note:'大姑很快就会知道了……' },
+    { t:'我考虑一下',              dmg:3,  next:'ch2_date_wrapup_meh', attitude:'deflect' },
+    { t:'你先加吧，我回去想想',    dmg:4,  next:'ch2_date_wrapup_meh', attitude:'deflect' },
+    { t:'不好意思，我觉得不太合适', dmg:10, next:'ch2_date_wrapup_bad', attitude:'resist', reaction:{who:'date', text:'没关系没关系，理解的'} },
+  ]
+},
+
+// ══════════════════════════════════════
+// Chapter 2：爸爸深夜电话（argue/resist 路线）
+// ══════════════════════════════════════
+// ══════════════════════════════════════
+// Chapter 2：爸妈突袭（ignore 路线）
+// ══════════════════════════════════════
+ch2_home_msg: {
+  round:4, who:'mom', type:'text',
+  text:'宝，我和你爸到你楼下了，下来开门',
+  opts:[
+    { t:'？？？你们怎么来了',       dmg:5,  next:'ch2_home_arrive', attitude:'resist' },
+    { t:'妈，你们怎么不提前说',     dmg:3,  next:'ch2_home_arrive', attitude:'deflect' },
+    { t:'好，我下来',               dmg:2,  next:'ch2_home_arrive', attitude:'comply' },
+    { t:'[已读不回]',               dmg:10, next:'ch2_home_arrive', attitude:'ignore', note:'但他们已经在门口了……' },
+  ]
+},
+
+ch2_home_arrive: {
+  round:4, scene:'home', who:null, type:'home',
+  text:'门铃响了。\n你打开门，爸妈拎着大包小包站在门口。妈妈没等你开口就挤进来了。',
+  opts:[
+    { t:'妈你们带这么多东西干嘛',   dmg:3,  next:'ch2_home_scan', attitude:'resist' },
+    { t:'快进来快进来',             dmg:2,  next:'ch2_home_scan', attitude:'comply' },
+    { t:'（赶紧收拾桌上的外卖盒）', dmg:5,  next:'ch2_home_scan', attitude:'deflect', note:'来不及了' },
+  ]
+},
+
+ch2_home_scan: {
+  round:4, scene:'home', who:'mom', type:'home',
+  text:'（环顾四周）\n这就是你住的地方？冰箱里有东西吗？',
+  opts:[
+    { t:'有有有，别翻了',           dmg:3,  next:'ch2_home_fridge', attitude:'deflect' },
+    { t:'妈你先坐下歇会儿',        dmg:2,  next:'ch2_home_fridge', attitude:'comply' },
+    { t:'妈你不要什么都看',         dmg:8,  next:'ch2_home_fridge', attitude:'resist' },
+  ]
+},
+
+ch2_home_fridge: {
+  round:4, scene:'home', who:'mom', type:'home', bg:'project/kele.webp',
+  text:'（打开冰箱）\n就几瓶可乐？！你平时就吃这个？！',
+  opts:[
+    { t:'我都是点外卖的……',        dmg:5,  next:'ch2_home_confront', attitude:'deflect' },
+    { t:'妈外卖也能吃饱的',        dmg:3,  next:'ch2_home_confront', attitude:'comply' },
+    { t:'妈你管太多了',             dmg:12, next:'ch2_home_confront', attitude:'argue', reaction:{who:'mom', text:'我管你？我不管你谁管你！'} },
+  ]
+},
+
+ch2_home_confront: {
+  round:4, scene:'home', who:'mom', type:'home',
+  text:'（坐在沙发上叹气）\n你看看你过的什么日子。一个人在外面，吃不好睡不好。\n妈就是怕你这样，才想让你早点找个人……',
+  opts:[
+    { t:'妈，我自己能过好的',       dmg:8,  next:'ch2_home_truth', attitude:'resist' },
+    { t:'妈……你们突然来我没准备',   dmg:5,  next:'ch2_home_truth', attitude:'deflect' },
+    { t:'（低着头不说话）',          dmg:10, next:'ch2_home_truth', attitude:'ignore' },
+    { t:'妈我知道了，对不起',       dmg:6,  next:'ch2_home_truth', attitude:'comply' },
+  ]
+},
+
+ch2_home_truth: {
+  round:4, scene:'home', who:'dad', type:'home', bg:'project/fanhe.webp',
+  text:'（爸爸从袋子里掏出几盒你爱吃的菜）\n你妈昨晚做到凌晨两点。非要今天送来。',
+  opts:[
+    { t:'（鼻子一酸）妈……',        dmg:15, next:'ch2_home_end', attitude:'comply', note:'这是今天最重的一击' },
+    { t:'谢谢妈，谢谢爸',          dmg:5,  next:'ch2_home_end', attitude:'comply', restore:10, note:'🛡️ 你感受到了实实在在的爱  +10 心理防线' },
+    { t:'你们不用这样的',           dmg:8,  next:'ch2_home_end', attitude:'resist' },
+  ]
+},
+
+ch2_home_end: {
+  round:4, scene:'home', who:'mom', type:'home',
+  text:'行了，东西放冰箱了。我们不打扰你了。\n（在门口）记得吃，别放坏了。',
+  opts:[
+    { t:'妈，要不你们今晚住这吧',   dmg:3,  next:'ch2_home_wrapup', attitude:'comply' },
+    { t:'好，路上注意安全',         dmg:5,  next:'ch2_home_wrapup', attitude:'deflect' },
+    { t:'嗯',                       dmg:8,  next:'ch2_home_wrapup', attitude:'ignore' },
+  ]
+},
+
+ch2_home_wrapup: {
+  round:4, scene:'home', who:null, type:'home',
+  text:'门关上了。屋子里满是饭菜的香味。\n你站在原地愣了很久。',
+  opts:[
+    { t:'（打开微信）',             dmg:0,  next:'ch2_home_aftermath' },
+  ]
+},
+
+ch2_home_aftermath: {
+  round:4, who:null, type:'multi',
+  lines:[
+    { who:'mom',   text:'到家了，动车还有一个小时' },
+    { who:'mom',   text:'菜热一下再吃，别凉着吃' },
+    { who:'dad',   text:'嗯' },
+    { who:'aunt',  text:'你爸妈去看你了？好不好？' },
+  ],
+  opts:[
+    { t:'妈，到了跟我说一声',       dmg:3,  next:null, attitude:'comply' },
+    { t:'知道了妈，路上小心',       dmg:3,  next:null, attitude:'comply' },
+    { t:'（打字又删掉，最后发了个表情）', dmg:8, next:null, attitude:'ignore', note:'有些话你还是说不出口' },
+    { t:'姑，挺好的',               dmg:5,  next:null, attitude:'deflect' },
+  ]
+},
+
+ch2_call_ring: {
+  round:4, scene:'call', who:'dad', type:'call_ring',
+  text:'',
+  opts:[]
+},
+
+ch2_call_open: {
+  round:4, scene:'call', who:'dad', type:'call',
+  text:'（三秒沉默）\n……吃了吗？',
+  opts:[
+    { t:'嗯，吃了',                dmg:3,  next:'ch2_call_work', attitude:'comply' },
+    { t:'爸，有事说事',            dmg:8,  next:'ch2_call_serious', attitude:'resist' },
+    { t:'（沉默）',                dmg:5,  next:'ch2_call_work', attitude:'ignore' },
+  ]
+},
+
+ch2_call_work: {
+  round:4, scene:'call', who:'dad', type:'call',
+  text:'工作还顺利吗？你妈说你最近加班挺多。',
+  opts:[
+    { t:'还行，挺忙的',            dmg:3,  next:'ch2_call_serious', attitude:'deflect' },
+    { t:'别说工作了，我猜你想说什么', dmg:6, next:'ch2_call_serious', attitude:'resist' },
+    { t:'爸你直接说吧',            dmg:5,  next:'ch2_call_serious', attitude:'argue' },
+  ]
+},
+
+ch2_call_serious: {
+  round:4, scene:'call', who:'dad', type:'call',
+  text:'（清了清嗓子）\n你妈让我跟你说说。今天群里的事……你也别怪她们。',
+  opts:[
+    { t:'我知道，她们也是关心',    dmg:5,  next:'ch2_call_truth', attitude:'comply' },
+    { t:'爸，我有我自己的节奏',    dmg:10, next:'ch2_call_truth', attitude:'resist' },
+    { t:'我没怪她们，我怪这种方式', dmg:8, next:'ch2_call_truth', attitude:'argue' },
+  ]
+},
+
+ch2_call_truth: {
+  round:4, scene:'call', who:'dad', type:'call',
+  text:'（电话那头沉默了一会儿）\n其实……爸也不是催你。\n爸当年也是被你爷爷逼着结的婚。',
+  opts:[
+    { t:'……爸？',                  dmg:3,  next:'ch2_call_reveal', attitude:'comply' },
+    { t:'那你后悔吗',              dmg:5,  next:'ch2_call_reveal', attitude:'resist' },
+    { t:'（认真听着）',            dmg:2,  next:'ch2_call_reveal', attitude:'ignore' },
+  ]
+},
+
+ch2_call_reveal: {
+  round:4, scene:'call', who:'dad', type:'call',
+  text:'后不后悔……说不上。但爸不想你也这样。\n爸只是——怕以后没人照顾你。',
+  opts:[
+    { t:'爸……（鼻子一酸）',       dmg:15, next:'ch2_call_end', attitude:'comply', note:'这是今晚最重的一击' },
+    { t:'爸，我能照顾好自己',      dmg:8,  next:'ch2_call_end', attitude:'resist' },
+    { t:'爸，谢谢你跟我说这些',    dmg:5,  next:'ch2_call_end', attitude:'deflect', restore:10, note:'🛡️ 父子之间难得的坦诚  +10 心理防线' },
+  ]
+},
+
+ch2_call_end: {
+  round:4, scene:'call', who:'dad', type:'call',
+  text:'行了，不早了，早点睡。\n……别跟你妈说我打过这个电话。',
+  opts:[
+    { t:'好，爸你也早点睡',        dmg:5,  next:'ch2_call_wrapup' },
+    { t:'知道了爸',                dmg:5,  next:'ch2_call_wrapup' },
+    { t:'爸，晚安',                dmg:3,  next:'ch2_call_wrapup' },
+  ]
+},
+
+ch2_call_wrapup: {
+  round:4, scene:'call', who:null, type:'call',
+  text:'（嘟——通话结束）\n你放下手机，看着黑漆漆的天花板。\n过了一会儿，你打开了微信。',
+  opts:[
+    { t:'（打开微信）',            dmg:0, next:'ch2_call_aftermath' },
+  ]
+},
+
+ch2_call_aftermath: {
+  round:4, who:null, type:'multi',
+  lines:[
+    { who:'mom',   text:'宝，明天有空吗？妈想跟你视频' },
+    { who:'aunt',  text:'你表妹男朋友长得还行嘛' },
+    { who:'uncle', text:'[转发了一条视频号]' },
+  ],
+  opts:[
+    { t:'妈，明天再说吧',          dmg:3,  next:null, attitude:'deflect' },
+    { t:'好的妈',                  dmg:5,  next:null, attitude:'comply' },
+    { t:'（放下手机，看着天花板）', dmg:8,  next:null, attitude:'ignore', note:'这一晚你睡得很不好' },
+    { t:'你们能消停一天吗',        dmg:15, next:null, attitude:'argue', reaction:{who:'mom', text:'……好吧'} },
+  ]
+},
+
+// ── 相亲结束过渡：加了微信 ──
+ch2_date_wrapup_good: {
+  round:4, scene:'date', who:null, type:'vn',
+  text:'你们互相扫了码。\n走出咖啡店，你看了眼手机——大姑发了 8 条消息。',
+  opts:[
+    { t:'（深呼吸，打开微信）',     dmg:0, next:'ch2_date_aftermath_good' },
+  ]
+},
+ch2_date_aftermath_good: {
+  round:4, who:null, type:'multi',
+  lines:[
+    { who:'aunt',  text:'加了没有！！！' },
+    { who:'aunt',  text:'加了吧！我看王浩发朋友圈了！' },
+    { who:'mom',   text:'宝你去见了？？怎么不告诉妈！' },
+    { who:'aunt',  text:'人不错吧！我眼光好吧！' },
+    { who:'uncle', text:'好事好事 👍' },
+  ],
+  opts:[
+    { t:'嗯加了，人还挺礼貌的',    dmg:5,  next:null, attitude:'comply', note:'大姑开始规划第二次约会了……' },
+    { t:'加了加了，先别问了',      dmg:3,  next:null, attitude:'deflect' },
+    { t:'加了，但我觉得一般',      dmg:8,  next:null, attitude:'resist', reaction:{who:'aunt', text:'怎么会！那么好的条件！'} },
+    { t:'（把手机调静音）',        dmg:6,  next:null, attitude:'ignore', note:'你知道明天还会被追问的' },
+  ]
+},
+
+// ── 相亲结束过渡：模糊回应 ──
+ch2_date_wrapup_meh: {
+  round:4, scene:'date', who:null, type:'vn',
+  text:'你们客气地告了别。\n走在回去的路上，你也不知道自己是什么感觉。',
+  opts:[
+    { t:'（掏出手机看消息）',       dmg:0, next:'ch2_date_aftermath_meh' },
+  ]
+},
+ch2_date_aftermath_meh: {
+  round:4, who:null, type:'multi',
+  lines:[
+    { who:'aunt',  text:'怎么样怎么样！聊了多久！' },
+    { who:'mom',   text:'宝宝去见了？？' },
+    { who:'aunt',  text:'加微信了没！' },
+  ],
+  opts:[
+    { t:'还行吧，我再想想',        dmg:3,  next:null, attitude:'deflect' },
+    { t:'不太合适',                dmg:8,  next:null, attitude:'resist', reaction:{who:'aunt', text:'你到底想找什么样的！'} },
+    { t:'姑我回头跟你说',          dmg:4,  next:null, attitude:'deflect', note:'你不打算回头说' },
+    { t:'（假装没看到）',          dmg:6,  next:null, attitude:'ignore' },
+  ]
+},
+
+// ── 相亲结束过渡：拒绝了 ──
+ch2_date_wrapup_bad: {
+  round:4, scene:'date', who:null, type:'vn',
+  text:'你们尴尬地道了别。\n王浩说"没关系"的时候，其实看起来松了口气。',
+  opts:[
+    { t:'（走出咖啡店，打开手机）', dmg:0, next:'ch2_date_aftermath_bad' },
+  ]
+},
+ch2_date_aftermath_bad: {
+  round:4, who:null, type:'multi',
+  lines:[
+    { who:'aunt',  text:'怎么样！加微信了吧！' },
+    { who:'mom',   text:'宝你去了吗？？' },
+  ],
+  opts:[
+    { t:'姑，我觉得不太合适',      dmg:10, next:null, attitude:'resist', reaction:{who:'aunt', text:'你！那么好的条件你不要！'} },
+    { t:'见了，但是没感觉',        dmg:6,  next:null, attitude:'deflect', reaction:{who:'aunt', text:'第一次见面哪来的感觉！再约一次！'} },
+    { t:'姑，以后别帮我安排了',    dmg:15, next:null, attitude:'argue', reaction:{who:'mom', text:'你这孩子怎么跟你大姑说话呢'} },
+    { t:'（关掉手机）',            dmg:8,  next:null, attitude:'ignore', note:'你知道这事没完' },
+  ]
+},
+
+}; // end NODES
+
+const ENDINGS = {
+  // ── 通关结局（按态度人格分）──
+  taiji: {
+    emoji:'🌀', title:'太极宗师',
+    sub:'四两拨千斤，全身而退',
+    desc:'你从不正面回答任何问题，却让所有人觉得你很乖。\n「打太极的最高境界，是让对方觉得自己赢了」',
+    share:'太极宗师',
+  },
+  xiaoshun: {
+    emoji:'🐑', title:'孝顺典范',
+    sub:'全程点头微笑',
+    desc:'你答应了所有事，周六的相亲、下周的视频通话、过年回家抱孩子……\n现在，你需要想想怎么兑现这些承诺。',
+    share:'孝顺典范',
+  },
+  rebel: {
+    emoji:'🔥', title:'叛逆勇士',
+    sub:'虽千万人，吾往矣',
+    desc:'你选择了最难的路——说出真心话。\n他们不理解，但至少你没有骗自己。',
+    share:'叛逆勇士',
+  },
+  coldwar: {
+    emoji:'🧊', title:'冷战大师',
+    sub:'已读不回，杀人诛心',
+    desc:'你的沉默比任何回复都让他们难受。\n群里安静了，但你知道暴风雨只是推迟了。',
+    share:'冷战大师',
+  },
+  survivor: {
+    emoji:'😮‍💨', title:'资深老油条',
+    sub:'带伤通关，见招拆招',
+    desc:'撑过来了，但你知道下周还有视频电话。\n「年轻人在家庭群的第一课：活着就是胜利」',
+    share:'资深老油条',
+  },
+  laststand: {
+    emoji:'💀', title:'最后一道防线',
+    sub:'险象环生，勉强撑住',
+    desc:'奶奶那句话差点击穿你。不怪她，是你太爱她了。',
+    share:'最后一道防线',
+  },
+  // ── 崩溃结局（按态度分）──
+  bd_niceguy: {
+    emoji:'😭', title:'老好人的代价',
+    sub:'你一直在说"好"，直到说不动了',
+    desc:'你以为顺从就能平安，但每一句"好的"都在消耗你。\n有时候，拒绝也是一种爱自己。',
+    share:'老好人的代价',
+  },
+  bd_fighter: {
+    emoji:'💥', title:'两败俱伤',
+    sub:'你选择了正面硬刚',
+    desc:'你说出了心里话，但群炸了。\n妈妈在哭，爸爸沉默，大姑退群了。\n……大姑五分钟后又被拉回来了。',
+    share:'两败俱伤',
+  },
+  bd_silent: {
+    emoji:'🫥', title:'沉默的代价',
+    sub:'你以为不说话就没事了',
+    desc:'已读不回是最消极的抵抗。\n他们不知道你在想什么，你也不知道自己在坚持什么。',
+    share:'沉默的代价',
+  },
+  bd_generic: {
+    emoji:'😵', title:'防线崩溃',
+    sub:'心理防线归零',
+    desc:'建议下次回消息前先深呼吸三次。\n也许，找个时间和他们好好谈一次。',
+    share:'防线崩溃',
+  },
+  // ── 特殊结局 ──
+  refused_call: {
+    emoji:'📵', title:'未接来电 (3)',
+    sub:'你没有接爸爸的电话',
+    desc:'他打了三次，你都挂了。\n你不知道他想说什么。也许永远不会知道了。\n第二天早上，你看到妈妈发了一条消息：\n「你爸昨晚一夜没睡」',
+    share:'未接来电 (3)',
+  },
+  quit: {
+    emoji:'🚪', title:'逃跑成功（暂时）',
+    sub:'你退出了群聊',
+    desc:'妈妈在 3 秒后重新把你拉进来了。\n大姑补了一句："年轻人脾气真大"',
+    share:'逃跑成功（暂时）',
+  },
+};
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let S = {};
+
+function resetState() {
+  S = {
+    hp: 100,
+    nodeId: 'r1_open',
+    done: 0,
+    lastRound: 0,
+    waiting: false,
+    bdRound: 0,
+    bdNode: '',
+    dadPrivate: null,
+    att: { comply:0, deflect:0, resist:0, argue:0, ignore:0 },
+    chapter: 1,
+    scene: 'chat',
+  };
+}
+
+// ─────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function setHP(v) {
+  S.hp = Math.max(0, Math.min(120, v));
+  const pct = S.hp + '%';
+  const bg = S.hp > 60 ? '#e74c3c' : S.hp > 30 ? '#e67e22' : '#c0392b';
+  $('hpFill').style.width = pct;
+  $('hpText').textContent = pct;
+  $('hpFill').style.background = bg;
+  // Sync secondary HP bars
+  ['dateHpFill','callHpFill','homeHpFill'].forEach(id => {
+    if ($(id)) { $(id).style.width = pct; $(id).style.background = bg; }
+  });
+  ['dateHpText','callHpText','homeHpText'].forEach(id => {
+    if ($(id)) $(id).textContent = pct;
+  });
+}
+
+function scrollDown() {
+  const a = $('chatArea');
+  requestAnimationFrame(() => { a.scrollTop = a.scrollHeight; });
+}
+
+function flashApp() {
+  const a = document.getElementById('app');
+  a.classList.remove('flash-red');
+  void a.offsetWidth;
+  a.classList.add('flash-red');
+}
+
+// ─────────────────────────────────────────
+// RENDERING
+// ─────────────────────────────────────────
+function addSys(text) {
+  const d = document.createElement('div');
+  d.className = 'system-msg';
+  d.textContent = text;
+  $('chatArea').appendChild(d);
+  scrollDown();
+}
+
+function makeAvatar(who) {
+  const char = C[who];
+  return `<div class="avatar" style="background-image:url('${char.img}')"></div>`;
+}
+
+function addBubble(who, text, container) {
+  const char = C[who];
+  const target = container || $('chatArea');
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  row.innerHTML =
+    makeAvatar(who) +
+    `<div class="msg-meta">` +
+      `<div class="msg-name">${char.name}</div>` +
+      `<div class="msg-bubble">${escHtml(text)}</div>` +
+    `</div>`;
+  target.appendChild(row);
+  if (!container) scrollDown();
+}
+
+function addVideoCard(who, title, author, imgUrl) {
+  const char = C[who];
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  row.innerHTML =
+    makeAvatar(who) +
+    `<div class="msg-meta">` +
+      `<div class="msg-name">${char.name}</div>` +
+      `<div class="video-card">` +
+        `<div class="video-thumb" style="background-image:url('${imgUrl}')">` +
+          `<div class="video-caption">${escHtml(title)}</div>` +
+          `<div class="video-play">▶</div>` +
+        `</div>` +
+        `<div class="video-footer">` +
+          `<span style="color:#f90;font-size:13px">𝕎</span>` +
+          `<span class="video-author">${escHtml(author)}</span>` +
+        `</div>` +
+      `</div>` +
+    `</div>`;
+  $('chatArea').appendChild(row);
+  scrollDown();
+}
+
+function addArticleCard(who, title, source, imgUrl) {
+  const char = C[who];
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  row.innerHTML =
+    makeAvatar(who) +
+    `<div class="msg-meta">` +
+      `<div class="msg-name">${char.name}</div>` +
+      `<div class="article-card">` +
+        `<div class="article-left">` +
+          `<div class="article-title">${escHtml(title)}</div>` +
+          `<div class="article-source">${escHtml(source)}</div>` +
+        `</div>` +
+        `<div class="article-thumb" style="background-image:url('${imgUrl}')"></div>` +
+      `</div>` +
+    `</div>`;
+  $('chatArea').appendChild(row);
+  scrollDown();
+}
+
+function addRedPacket(who, note, opts) {
+  const char = C[who];
+  const rpId = 'rp_' + Date.now();
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  row.innerHTML =
+    makeAvatar(who) +
+    `<div class="msg-meta">` +
+      `<div class="msg-name">${char.name}</div>` +
+      `<div class="red-packet" id="${rpId}" style="cursor:pointer" onclick="openRedPacket('${rpId}')">` +
+        `<div class="rp-top">` +
+          `<div class="rp-icon">🧧</div>` +
+          `<div class="rp-text"><strong>微信红包</strong>${escHtml(note)}</div>` +
+        `</div>` +
+        `<div class="rp-bottom">点击领取红包</div>` +
+      `</div>` +
+    `</div>`;
+  $('chatArea').appendChild(row);
+  scrollDown();
+  window['_rp_opts_' + rpId] = opts;
+  // show only "不领" in the options area
+  renderOpts([{ t:'不领', _rpDecline: rpId }]);
+}
+
+window.openRedPacket = function(rpId) {
+  if (S.waiting) return;
+  const rp = document.getElementById(rpId);
+  if (!rp || rp.dataset.opened) return;
+  rp.dataset.opened = '1';
+  rp.style.cursor = 'default';
+  rp.querySelector('.rp-bottom').textContent = '✓ 已领取';
+  rp.querySelector('.rp-bottom').style.background = 'rgba(0,0,0,0.25)';
+  $('optArea').innerHTML = '';
+  const opts = window['_rp_opts_' + rpId];
+  pick(opts[0], 0, opts, true);
+};
+
+function addVoice(who, duration) {
+  const char = C[who];
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  row.innerHTML =
+    makeAvatar(who) +
+    `<div class="msg-meta">` +
+      `<div class="msg-name">${char.name}</div>` +
+      `<div class="voice-bubble">` +
+        `<div class="voice-wave">🔊</div>` +
+        `<div style="flex:1;height:2px;background:linear-gradient(to right,#07c160 60%,#ccc 60%);border-radius:2px"></div>` +
+        `<div class="voice-dur">${duration}"</div>` +
+      `</div>` +
+    `</div>`;
+  $('chatArea').appendChild(row);
+  scrollDown();
+}
+
+function addProfileCard(who, name, age, job, height, edu, note) {
+  const char = C[who];
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  row.innerHTML =
+    makeAvatar(who) +
+    `<div class="msg-meta">` +
+      `<div class="msg-name">${char.name}</div>` +
+      `<div class="profile-card">` +
+        `<div class="pc-main">` +
+          `<div class="pc-avatar-wrap" style="background:linear-gradient(135deg,#b0c4de,#8fa8c8)"></div>` +
+          `<div class="pc-info">` +
+            `<div class="pc-name">${escHtml(name)}</div>` +
+            `<div class="pc-sub">个人名片</div>` +
+          `</div>` +
+        `</div>` +
+        `<div class="pc-divider"></div>` +
+        `<div class="pc-detail">${age}岁 · ${escHtml(job)} · ${height}cm · ${escHtml(edu)}</div>` +
+      `</div>` +
+    `</div>`;
+  $('chatArea').appendChild(row);
+  scrollDown();
+}
+
+function addBabyPhoto(who, imgUrl) {
+  const char = C[who];
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  const hasImg = imgUrl && imgUrl.length > 0;
+  const photoStyle = hasImg
+    ? `background-image:url('${imgUrl}');background-size:cover;background-position:center;font-size:0`
+    : ``;
+  row.innerHTML =
+    makeAvatar(who) +
+    `<div class="msg-meta">` +
+      `<div class="msg-name">${char.name}</div>` +
+      `<div class="baby-photo" style="${photoStyle}">${hasImg ? '' : '👶'}</div>` +
+    `</div>`;
+  $('chatArea').appendChild(row);
+  scrollDown();
+}
+
+// ─────────────────────────────────────────
+// SCREEN NAVIGATION
+// ─────────────────────────────────────────
+function showChatList() {
+  renderChatList();
+  $('chatListScreen').classList.add('active');
+}
+
+function hideScreens() {
+  $('chatListScreen').classList.remove('active');
+  $('privateChatScreen').classList.remove('active');
+}
+
+function backFromPrivate() {
+  $('privateChatScreen').classList.remove('active');
+  renderChatList();
+}
+
+function renderChatList() {
+  const body = $('chatListBody');
+  body.innerHTML = '';
+
+  // Group chat row
+  const r1 = document.createElement('div');
+  r1.className = 'cl-row';
+  r1.innerHTML =
+    `<div class="cl-av" style="background:#07c160;color:#fff">🏠</div>` +
+    `<div class="cl-body">` +
+      `<div class="cl-top"><span class="cl-name">家庭群 (5)</span><span class="cl-time">刚刚</span></div>` +
+      `<div class="cl-preview">妈妈、高山流水、刘秀英…</div>` +
+    `</div>`;
+  r1.onclick = hideScreens;
+  body.appendChild(r1);
+
+  // Dad private chat row (if triggered)
+  if (S.dadPrivate) {
+    const r2 = document.createElement('div');
+    r2.className = 'cl-row';
+    const badge = S.dadPrivate.pending ? `<div class="cl-badge">1</div>` : '';
+    r2.innerHTML =
+      `<div class="cl-av" style="background-image:url('${C.dad.img}')"></div>` +
+      `<div class="cl-body">` +
+        `<div class="cl-top"><span class="cl-name">${C.dad.name}</span><span class="cl-time">刚刚</span></div>` +
+        `<div class="cl-preview">${escHtml(S.dadPrivate.text)}</div>` +
+      `</div>` + badge;
+    r2.onclick = () => openPrivateChatScreen();
+    body.appendChild(r2);
+  }
+}
+
+function setupPrivateChatContent() {
+  if (!S.dadPrivate) return;
+  const { msg } = S.dadPrivate;
+  const char = C[msg.who];
+  $('privateChatTitle').textContent = char.name;
+
+  const chatArea = $('privateMsgArea');
+  chatArea.innerHTML = '';
+  addBubble(msg.who, msg.text, chatArea);
+
+  // Show player's reply if already done
+  if (S.dadPrivate.replyText) {
+    const pRow = document.createElement('div');
+    pRow.className = 'player-row';
+    pRow.innerHTML = `<div class="player-bubble">${escHtml(S.dadPrivate.replyText)}</div>`;
+    chatArea.appendChild(pRow);
+  }
+
+  const optArea = $('privateOptArea');
+  optArea.innerHTML = '';
+  if (S.dadPrivate.pending) {
+    msg.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt.t;
+      btn.onclick = () => {
+        optArea.querySelectorAll('.opt-btn').forEach((b, j) => {
+          b.className = 'opt-btn ' + (j === i ? 'chosen' : 'disabled');
+        });
+        const pRow = document.createElement('div');
+        pRow.className = 'player-row';
+        pRow.innerHTML = `<div class="player-bubble">${escHtml(opt.t)}</div>`;
+        chatArea.appendChild(pRow);
+        chatArea.scrollTop = chatArea.scrollHeight;
+        S.dadPrivate.pending = false;
+        S.dadPrivate.replyText = opt.t;
+        setTimeout(() => {
+          hideScreens();
+          S.dadPrivate.resolve(opt);
+        }, 700);
+      };
+      optArea.appendChild(btn);
+    });
+  }
+}
+
+function openPrivateChatScreen() {
+  setupPrivateChatContent();
+  $('chatListScreen').classList.remove('active');
+  $('privateChatScreen').classList.add('active');
+}
+
+function showPrivateMessage(msg) {
+  return new Promise(resolve => {
+    const char = C[msg.who];
+    S.dadPrivate = { msg, resolve, text: msg.text, pending: true, replyText: null };
+
+    // Notification banner — tap to open private chat
+    const banner = document.createElement('div');
+    banner.className = 'notif-banner';
+    banner.style.cursor = 'pointer';
+    banner.innerHTML =
+      `<div class="notif-av" style="background-image:url('${char.img}')"></div>` +
+      `<div class="notif-body">` +
+        `<div class="notif-from">💬 ${char.name}</div>` +
+        `<div class="notif-msg">${escHtml(msg.text)}</div>` +
+      `</div>` +
+      `<div style="font-size:11px;color:rgba(255,255,255,0.35);flex-shrink:0;padding-left:6px">点击回复</div>`;
+    $('app').appendChild(banner);
+
+    // Dismiss button (ignore path)
+    const ignoreBtn = document.createElement('button');
+    ignoreBtn.textContent = '忽略';
+    ignoreBtn.style.cssText =
+      'position:absolute;top:8px;right:12px;background:none;border:none;' +
+      'font-size:11px;color:rgba(255,255,255,0.45);cursor:pointer;padding:2px 4px';
+    banner.appendChild(ignoreBtn);
+
+    const dismissBanner = () => {
+      banner.classList.remove('show');
+      setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
+    };
+
+    // Tap banner → open private chat
+    banner.onclick = (e) => {
+      if (e.target === ignoreBtn) return;
+      dismissBanner();
+      setupPrivateChatContent();
+      $('privateChatScreen').classList.add('active');
+    };
+
+    // Ignore button → penalty, game continues
+    ignoreBtn.onclick = (e) => {
+      e.stopPropagation();
+      dismissBanner();
+      if (S.dadPrivate.pending) {
+        S.dadPrivate.pending = false;
+        resolve({ t:'[未回复]', dmg:20, next:'r3_finale', note:'爸爸发现你没有回复……沉默了很久' });
+      }
+    };
+
+    requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add('show')));
+  });
+}
+
+function addDmgLabel(dmg) {
+  const d = document.createElement('div');
+  d.className = 'dmg-row';
+  d.innerHTML = `<span class="dmg-label">-${dmg}% 心理防线</span>`;
+  $('chatArea').appendChild(d);
+  scrollDown();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─────────────────────────────────────────
+// SHOW MESSAGE
+// ─────────────────────────────────────────
+function showMessage(msg) {
+  if (msg.type === 'text') {
+    addBubble(msg.who, msg.text);
+    renderOpts(msg.opts);
+  } else if (msg.type === 'video') {
+    addVideoCard(msg.who, msg.title, msg.author, msg.img);
+    renderOpts(msg.opts);
+  } else if (msg.type === 'article') {
+    addArticleCard(msg.who, msg.title, msg.source, msg.img);
+    renderOpts(msg.opts);
+  } else if (msg.type === 'multi') {
+    msg.lines.forEach(l => addBubble(l.who, l.text));
+    renderOpts(msg.opts);
+  } else if (msg.type === 'redpacket') {
+    addRedPacket(msg.who, msg.note, msg.opts);
+    // no renderOpts — interaction is on the packet itself
+  } else if (msg.type === 'voice') {
+    addVoice(msg.who, msg.duration);
+    renderOpts(msg.opts);
+  } else if (msg.type === 'profile') {
+    addBubble(msg.who, msg.text);
+    setTimeout(() => {
+      addProfileCard(msg.who, msg.pName, msg.age, msg.job, msg.height, msg.edu, msg.pNote);
+      renderOpts(msg.opts);
+      scrollDown();
+    }, 400);
+  } else if (msg.type === 'baby') {
+    addBabyPhoto(msg.who, msg.img);
+    setTimeout(() => {
+      addBubble(msg.who, msg.text);
+      renderOpts(msg.opts);
+      scrollDown();
+    }, 400);
+  } else if (msg.type === 'ally') {
+    msg.lines.forEach(l => addBubble(l.who, l.text));
+    setTimeout(() => {
+      addSys(msg.note);
+      setHP(S.hp + msg.restore);
+      S.nodeId = msg.next || null;
+      S.done++;
+      setTimeout(() => { S.waiting = false; advance(); }, 900);
+    }, 700);
+    S.waiting = true;
+    $('optArea').innerHTML = '';
+  } else if (msg.type === 'private') {
+    S.waiting = true;
+    $('optArea').innerHTML = '';
+    showPrivateMessage(msg).then(opt => {
+      S.waiting = false;
+      const dmg = opt.dmg || 0;
+      if (opt.note) setTimeout(() => addSys(opt.note), 200);
+      S.nodeId = opt.next || null;
+      S.done++;
+      if (dmg > 0) {
+        setTimeout(() => {
+          addDmgLabel(dmg); setHP(S.hp - dmg); flashApp();
+          if (S.hp <= 0) { S.bdRound=msg.round; setTimeout(()=>endGame('breakdown'),900); return; }
+          scheduleNext();
+        }, 300);
+      } else { scheduleNext(); }
+    });
+  }
+}
+
+function renderOpts(opts) {
+  const area = $('optArea');
+  area.innerHTML = '';
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt.t;
+    btn.dataset.i = i;
+    if (opt._rpDecline) {
+      btn.onclick = () => {
+        const rpOpts = window['_rp_opts_' + opt._rpDecline];
+        const rp = document.getElementById(opt._rpDecline);
+        if (rp) { rp.style.cursor='default'; rp.onclick=null; }
+        area.innerHTML = '';
+        pick(rpOpts[1], 1, rpOpts, true);
+      };
+    } else {
+      btn.onclick = () => pick(opt, i, opts);
+    }
+    area.appendChild(btn);
+  });
+}
+
+function lockOpts(chosenIdx) {
+  $('optArea').querySelectorAll('.opt-btn').forEach((b, i) => {
+    b.className = 'opt-btn ' + (i === chosenIdx ? 'chosen' : 'disabled');
+  });
+}
+
+// ─────────────────────────────────────────
+// PICK
+// ─────────────────────────────────────────
+function pick(opt, idx, allOpts, skipLock) {
+  if (S.waiting) return;
+  S.waiting = true;
+  if (!skipLock) lockOpts(idx);
+
+  // Quit special case
+  if (opt.special === 'quit') {
+    S.done++;
+    setTimeout(() => endGame('quit'), 600);
+    return;
+  }
+
+  const dmg = opt.dmg || 0;
+
+  // Track attitude
+  if (opt.attitude && S.att[opt.attitude] !== undefined) S.att[opt.attitude]++;
+
+  // Show player reply bubble
+  const pRow = document.createElement('div');
+  pRow.className = 'player-row';
+  pRow.innerHTML = `<div class="player-bubble">${escHtml(opt.t)}</div>`;
+  $('chatArea').appendChild(pRow);
+  scrollDown();
+
+  // Character reaction as bubble
+  if (opt.reaction) {
+    setTimeout(() => addBubble(opt.reaction.who, opt.reaction.text), 400);
+  }
+  // System note
+  if (opt.note) {
+    setTimeout(() => addSys(opt.note), 350);
+  }
+
+  // Navigate to next node
+  S.nodeId = opt.next || null;
+  S.done++;
+
+  // Show damage & apply
+  if (dmg > 0) {
+    setTimeout(() => {
+      addDmgLabel(dmg);
+      setHP(S.hp - dmg);
+      flashApp();
+
+      if (S.hp <= 0) {
+        const cur = NODES[S.nodeId] || {};
+        S.bdRound = cur.round || S.lastRound;
+        S.bdNode  = S.nodeId || '';
+        setTimeout(() => endGame('breakdown'), 900);
+        return;
+      }
+      scheduleNext(opt.transition);
+    }, 550);
+  } else {
+    scheduleNext(opt.transition);
+  }
+}
+
+function scheduleNext(pendingTransition) {
+  if (pendingTransition) {
+    setTimeout(() => {
+      S.waiting = false;
+      showTransition(pendingTransition.l1, pendingTransition.l2, () => {
+        S.chapter = 2;
+        // Restore chat UI if next scene needs it
+        const nextNode = NODES[S.nodeId];
+        if (nextNode && !nextNode.scene) restoreChatUI();
+        advance();
+      });
+    }, 900);
+  } else {
+    setTimeout(() => {
+      S.waiting = false;
+      advance();
+    }, 900);
+  }
+}
+
+// ─────────────────────────────────────────
+// ADVANCE
+// ─────────────────────────────────────────
+function advance() {
+  if (!S.nodeId || !NODES[S.nodeId]) {
+    if (S.scene === 'date') exitDateScene();
+    if (S.scene === 'call') exitCallScene();
+    endGame('complete');
+    return;
+  }
+
+  const msg = NODES[S.nodeId];
+
+  // Switch scene if needed
+  if (msg.scene && msg.scene !== S.scene) {
+    if (S.scene === 'date') exitDateScene();
+    if (S.scene === 'call') exitCallScene();
+    if (S.scene === 'home') exitHomeScene();
+    S.scene = msg.scene;
+  } else if (!msg.scene && S.scene !== 'chat') {
+    if (S.scene === 'date') exitDateScene();
+    if (S.scene === 'call') exitCallScene();
+    if (S.scene === 'home') exitHomeScene();
+  }
+
+  // Date scene
+  if (S.scene === 'date') {
+    setTimeout(() => showDateMessage(msg), 700);
+    return;
+  }
+
+  // Call scene
+  if (S.scene === 'call') {
+    if (msg.type === 'call_ring') {
+      setTimeout(() => showCallRing(msg), 700);
+    } else {
+      setTimeout(() => showCallMessage(msg), 700);
+    }
+    return;
+  }
+
+  // Home scene
+  if (S.scene === 'home') {
+    setTimeout(() => showHomeMessage(msg), 700);
+    return;
+  }
+
+  // Round divider (chat scene only)
+  if (msg.round > S.lastRound) {
+    S.lastRound = msg.round;
+    const labels = ['', '— 第一轮：开胃菜 —', '— 第二轮：火力全开 —', '— 第三轮：Boss 战 —', ''];
+    if (labels[msg.round]) addSys(labels[msg.round]);
+  }
+
+  setTimeout(() => showMessage(msg), 700);
+}
+
+// ─────────────────────────────────────────
+// END GAME
+// ─────────────────────────────────────────
+function getDominantAtt() {
+  const a = S.att;
+  const entries = Object.entries(a).filter(([k,v]) => v > 0);
+  if (entries.length === 0) return 'deflect';
+  entries.sort((x,y) => y[1] - x[1]);
+  return entries[0][0];
+}
+
+function pickEnding(type) {
+  if (type === 'quit') return 'quit';
+  if (typeof callDeclineCount !== 'undefined' && callDeclineCount >= 3) return 'refused_call';
+  const dom = getDominantAtt();
+  const a = S.att;
+
+  if (type === 'breakdown') {
+    if (a.ignore >= 2)                return 'bd_silent';
+    if (a.comply >= 3)                return 'bd_niceguy';
+    if (a.argue + a.resist >= 3)      return 'bd_fighter';
+    return 'bd_generic';
+  }
+  // completed — use counts + HP for more spread
+  if (a.ignore >= 3)                          return 'coldwar';
+  if (dom === 'deflect' && S.hp > 40)         return 'taiji';
+  if (dom === 'comply'  && S.hp > 25)         return 'xiaoshun';
+  if (a.argue + a.resist >= 4)                return 'rebel';
+  if (S.hp <= 30)                             return 'laststand';
+  return 'survivor';
+}
+
+function attBarsHTML() {
+  const labels = { comply:'顺从 🐑', deflect:'敷衍 🌀', resist:'反抗 ✊', argue:'硬刚 🔥', ignore:'已读不回 🧊' };
+  const total = Object.values(S.att).reduce((s,v) => s+v, 0) || 1;
+  const colors = { comply:'#4caf50', deflect:'#2196f3', resist:'#ff9800', argue:'#e53935', ignore:'#9e9e9e' };
+  let html = '<div style="margin-top:12px;text-align:left">';
+  for (const [k,v] of Object.entries(S.att)) {
+    if (v === 0) continue;
+    const pct = Math.round(v / total * 100);
+    html += `<div style="margin:6px 0;font-size:12px;color:#666">` +
+      `<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span>${labels[k]}</span><span>${v}次 (${pct}%)</span></div>` +
+      `<div style="background:#eee;border-radius:3px;height:6px;overflow:hidden">` +
+      `<div style="width:${pct}%;height:100%;background:${colors[k]};border-radius:3px"></div>` +
+      `</div></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function endGame(type) {
+  // Exit any active scene overlay first
+  if (S.scene === 'date') exitDateScene();
+  if (S.scene === 'call') exitCallScene();
+  if (S.scene === 'home') exitHomeScene();
+
+  // Chapter 1 complete → route to chapter 2
+  if (type === 'complete' && S.chapter === 1) {
+    startChapter2();
+    return;
+  }
+
+  // Show epilogue transition before any ending
+  if (!S._epilogueDone) {
+    S._epilogueDone = true;
+    const lines = {
+      complete:   ['故事暂时告一段落', '但家庭群永远不会消停……'],
+      breakdown:  ['你的心理防线崩溃了', '深呼吸，这只是一场群聊……'],
+      quit:       ['你退出了群聊', '但你知道，3秒后会被拉回来'],
+    };
+    const [l1, l2] = lines[type] || lines.complete;
+    showTransition(l1, l2, () => {
+      restoreChatUI();
+      endGame(type);
+    });
+    return;
+  }
+
+  const key = pickEnding(type);
+  const e = ENDINGS[key];
+  const roundsCleared = type === 'complete' ? (S.chapter === 2 ? 4 : 3) : (S.bdRound || S.lastRound || 1);
+
+  let extraHTML = '';
+  if (type === 'breakdown') {
+    extraHTML = `<br>在第 ${S.bdRound || S.lastRound} 轮破防`;
+  }
+
+  $('endCard').innerHTML =
+    `<button class="modal-close" onclick="dismissModal()">✕</button>` +
+    `<div class="m-emoji">${e.emoji}</div>` +
+    `<div class="m-title">${e.title}</div>` +
+    `<div class="m-sub">${e.sub}</div>` +
+    `<div class="m-desc">${e.desc.replace(/\n/g,'<br>')}</div>` +
+    `<div class="m-stats">` +
+      `心理防线剩余：<strong>${S.hp}%</strong><br>` +
+      `撑过了：<strong>${roundsCleared} 轮 · ${S.done} 条消息</strong>` +
+      extraHTML +
+    `</div>` +
+    attBarsHTML() +
+    `<button class="copy-btn" id="copyBtn" onclick="copyResult('${key}',${S.hp},${roundsCleared},${S.done})">复制结果分享</button>` +
+    `<button class="retry-btn" onclick="retryGame()">再来一局</button>`;
+
+  $('endModal').style.display = 'flex';
+  $('resultFab').style.display = 'none';
+}
+
+// ─────────────────────────────────────────
+// CHAPTER 2 SYSTEM
+// ─────────────────────────────────────────
+function restoreChatUI() {
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = '';
+  $('chatArea').style.display = '';
+  $('optArea').style.display = '';
+  document.querySelector('.health-wrap').style.display = '';
+}
+
+function startChapter2() {
+  const dom = getDominantAtt();
+  S.scene = 'chat';
+  restoreChatUI();
+
+  if (dom === 'ignore' || dom === 'deflect') {
+    addSys('—— 群聊安静了 ——');
+    S.nodeId = 'ch1_bridge_home';
+  } else if (dom === 'argue' || dom === 'resist') {
+    addSys('—— 群里没人说话了 ——');
+    S.nodeId = 'ch1_bridge_call';
+  } else {
+    addSys('—— 群聊渐渐安静了 ——');
+    S.nodeId = 'ch1_bridge_date';
+  }
+
+  S.waiting = false;
+  setTimeout(() => advance(), 1200);
+}
+
+function showTransition(line1, line2, cb) {
+  // Hide group chat UI during transition
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = 'none';
+  $('chatArea').style.display = 'none';
+  $('optArea').style.display = 'none';
+  document.querySelector('.health-wrap').style.display = 'none';
+
+  const el = $('chapterTransition');
+  el.querySelector('.ct-line1').textContent = line1;
+  el.querySelector('.ct-line2').textContent = line2;
+  el.style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => { el.style.display = 'none'; if (cb) cb(); }, 800);
+  }, 2500);
+}
+
+// ─────────────────────────────────────────
+// DATE SCENE RENDERING
+// ─────────────────────────────────────────
+function showDateMessage(msg) {
+  const ds = $('dateScreen');
+  ds.classList.add('active');
+  // Hide group chat UI
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = 'none';
+  $('chatArea').style.display = 'none';
+  $('optArea').style.display = 'none';
+  document.querySelector('.health-wrap').style.display = 'none';
+
+  const charArea = $('dateCharArea');
+  const dlg = $('dateDlg');
+  const dlgSpeaker = $('dateSpeaker');
+  const dlgText = $('dateText');
+  const optArea = $('dateOptArea');
+
+  if (msg.who && C[msg.who]) {
+    charArea.style.display = 'flex';
+    $('dateAvatar').style.backgroundImage = `url('${C[msg.who].img}')`;
+    $('dateName').textContent = C[msg.who].name;
+    dlgSpeaker.textContent = C[msg.who].name;
+    dlgSpeaker.style.display = 'block';
+  } else {
+    charArea.style.display = 'none';
+    dlgSpeaker.style.display = 'none';
+  }
+
+  dlgText.innerHTML = msg.text.replace(/\n/g, '<br>');
+  if (!msg.who) dlg.classList.add('narration'); else dlg.classList.remove('narration');
+
+  // Render options
+  optArea.innerHTML = '';
+  if (msg.opts) {
+    msg.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt.t;
+      btn.onclick = () => pickDate(opt, i, msg.opts);
+      optArea.appendChild(btn);
+    });
+  }
+
+  // Show notification if node has one
+  if (msg.notification) {
+    setTimeout(() => {
+      showDateNotification(msg.notification.who, msg.notification.text);
+    }, 1200);
+  }
+}
+
+function pickDate(opt, idx, allOpts) {
+  if (S.waiting) return;
+  S.waiting = true;
+  // Lock options
+  $('dateOptArea').querySelectorAll('.opt-btn').forEach((b, i) => {
+    b.className = 'opt-btn ' + (i === idx ? 'chosen' : 'disabled');
+  });
+
+  const dmg = opt.dmg || 0;
+  if (opt.attitude && S.att[opt.attitude] !== undefined) S.att[opt.attitude]++;
+
+  // Show player choice in dialogue
+  const dlg = $('dateDlg');
+  dlg.classList.remove('narration');
+  $('dateSpeaker').textContent = '你';
+  $('dateSpeaker').style.display = 'block';
+  $('dateText').textContent = opt.t;
+
+  // Reaction after a beat
+  if (opt.reaction) {
+    setTimeout(() => {
+      $('dateSpeaker').textContent = C[opt.reaction.who].name;
+      $('dateText').textContent = opt.reaction.text;
+    }, 800);
+  }
+
+  if (opt.note) {
+    setTimeout(() => addSys(opt.note), 400);
+  }
+
+  S.nodeId = opt.next || null;
+  S.done++;
+
+  // Restore HP (ally bond)
+  if (opt.restore) {
+    setTimeout(() => setHP(S.hp + opt.restore), 500);
+  }
+
+  const delay = opt.reaction ? 1500 : 700;
+  if (dmg > 0) {
+    setTimeout(() => {
+      setHP(S.hp - dmg);
+      if (S.hp <= 0) {
+        S.bdRound = 4;
+        setTimeout(() => endGame('breakdown'), 900);
+        return;
+      }
+      scheduleNext();
+    }, delay);
+  } else {
+    setTimeout(() => scheduleNext(), delay);
+  }
+}
+
+function showDateNotification(who, text) {
+  const char = C[who];
+  const banner = document.createElement('div');
+  banner.className = 'notif-banner';
+  banner.style.zIndex = '350'; // above date scene (300)
+  banner.innerHTML =
+    `<div class="notif-av" style="background-image:url('${char.img}')"></div>` +
+    `<div class="notif-body">` +
+      `<div class="notif-from">💬 ${char.name}</div>` +
+      `<div class="notif-msg">${escHtml(text)}</div>` +
+    `</div>`;
+  $('app').appendChild(banner);
+  requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add('show')));
+  setTimeout(() => {
+    banner.classList.remove('show');
+    setTimeout(() => { if (banner.parentNode) banner.remove(); }, 400);
+  }, 3500);
+}
+
+// ─────────────────────────────────────────
+// CALL SCENE RENDERING
+// ─────────────────────────────────────────
+let callTimerInterval = null;
+let callSeconds = 0;
+
+function showCallRing(msg) {
+  const cs = $('callScreen');
+  cs.classList.add('active');
+  // Hide group chat UI
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = 'none';
+  $('chatArea').style.display = 'none';
+  $('optArea').style.display = 'none';
+  document.querySelector('.health-wrap').style.display = 'none';
+
+  const char = C[msg.who];
+  $('callAvatar').style.backgroundImage = `url('${char.img}')`;
+  $('callName').textContent = char.name;
+  $('callStatus').textContent = '来电';
+  $('callTimer').textContent = '';
+  $('callDlg').textContent = '';
+  $('callDlg').className = 'call-dialogue';
+
+  // Show accept/decline buttons
+  $('callOptArea').innerHTML =
+    `<div style="grid-column:1/-1;display:flex;justify-content:center;gap:50px;padding:20px 0">` +
+      `<div style="text-align:center">` +
+        `<button class="call-btn call-btn-decline" onclick="declineCall()">📵</button>` +
+        `<div class="call-btn-label">挂断</div>` +
+      `</div>` +
+      `<div style="text-align:center">` +
+        `<button class="call-btn call-btn-accept" onclick="acceptCall()">📞</button>` +
+        `<div class="call-btn-label">接听</div>` +
+      `</div>` +
+    `</div>`;
+}
+
+window.acceptCall = function() {
+  $('callStatus').textContent = '通话中';
+  callSeconds = 0;
+  $('callTimer').textContent = '00:00';
+  callTimerInterval = setInterval(() => {
+    callSeconds++;
+    const m = String(Math.floor(callSeconds / 60)).padStart(2,'0');
+    const s = String(callSeconds % 60).padStart(2,'0');
+    $('callTimer').textContent = m + ':' + s;
+  }, 1000);
+  S.nodeId = 'ch2_call_open';
+  S.done++;
+  S.waiting = false;
+  advance();
+};
+
+window.callDeclineCount = 0;
+
+window.declineCall = function() {
+  if (callTimerInterval) clearInterval(callTimerInterval);
+  S.att.ignore++;
+  S.done++;
+  callDeclineCount++;
+
+  if (callDeclineCount < 3) {
+    // Dad calls back
+    $('callDlg').textContent = callDeclineCount === 1 ? '爸爸再次拨来……' : '爸爸第三次拨来……';
+    $('callDlg').className = 'call-dialogue narration';
+    $('callOptArea').innerHTML = '';
+    setTimeout(() => {
+      $('callDlg').textContent = '';
+      $('callStatus').textContent = '来电';
+      $('callOptArea').innerHTML =
+        `<div style="grid-column:1/-1;display:flex;justify-content:center;gap:50px;padding:20px 0">` +
+          `<div style="text-align:center">` +
+            `<button class="call-btn call-btn-decline" onclick="declineCall()">📵</button>` +
+            `<div class="call-btn-label">挂断</div>` +
+          `</div>` +
+          `<div style="text-align:center">` +
+            `<button class="call-btn call-btn-accept" onclick="acceptCall()">📞</button>` +
+            `<div class="call-btn-label">接听</div>` +
+          `</div>` +
+        `</div>`;
+    }, 1500);
+  } else {
+    // 3rd decline — dad gives up, special ending
+    $('callDlg').innerHTML = '爸爸没有再打来。<br>你盯着天花板看了很久。';
+    $('callDlg').className = 'call-dialogue narration';
+    $('callOptArea').innerHTML = '';
+    setHP(S.hp - 20);
+    setTimeout(() => {
+      exitCallScene();
+      endGame('complete');
+    }, 2500);
+  }
+};
+
+function showCallMessage(msg) {
+  const cs = $('callScreen');
+  if (!cs.classList.contains('active')) {
+    cs.classList.add('active');
+    $('chatArea').parentElement.querySelector('.nav-bar').style.display = 'none';
+    $('chatArea').style.display = 'none';
+    $('optArea').style.display = 'none';
+    document.querySelector('.health-wrap').style.display = 'none';
+  }
+
+  const dlg = $('callDlg');
+  if (msg.who && C[msg.who]) {
+    dlg.className = 'call-dialogue';
+  } else {
+    dlg.className = 'call-dialogue narration';
+  }
+  dlg.innerHTML = msg.text.replace(/\n/g, '<br>');
+
+  // Render options
+  const optArea = $('callOptArea');
+  optArea.innerHTML = '';
+  if (msg.opts) {
+    msg.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt.t;
+      btn.onclick = () => pickCall(opt, i, msg.opts);
+      optArea.appendChild(btn);
+    });
+  }
+}
+
+function pickCall(opt, idx, allOpts) {
+  if (S.waiting) return;
+  S.waiting = true;
+  $('callOptArea').querySelectorAll('.opt-btn').forEach((b, i) => {
+    b.className = 'opt-btn ' + (i === idx ? 'chosen' : 'disabled');
+  });
+
+  const dmg = opt.dmg || 0;
+  if (opt.attitude && S.att[opt.attitude] !== undefined) S.att[opt.attitude]++;
+
+  // Brief show of player's words
+  const dlg = $('callDlg');
+  dlg.className = 'call-dialogue';
+  dlg.textContent = opt.t;
+
+  if (opt.note) setTimeout(() => addSys(opt.note), 400);
+  if (opt.restore) setTimeout(() => setHP(S.hp + opt.restore), 500);
+
+  S.nodeId = opt.next || null;
+  S.done++;
+
+  if (dmg > 0) {
+    setTimeout(() => {
+      setHP(S.hp - dmg);
+      if (S.hp <= 0) {
+        if (callTimerInterval) clearInterval(callTimerInterval);
+        S.bdRound = 4;
+        setTimeout(() => endGame('breakdown'), 900);
+        return;
+      }
+      scheduleNext();
+    }, 900);
+  } else {
+    setTimeout(() => scheduleNext(), 900);
+  }
+}
+
+function exitCallScene() {
+  S.scene = 'chat';
+  $('callScreen').classList.remove('active');
+  if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = '';
+  $('chatArea').style.display = '';
+  $('optArea').style.display = '';
+  document.querySelector('.health-wrap').style.display = '';
+}
+
+// ─────────────────────────────────────────
+// HOME SCENE RENDERING
+// ─────────────────────────────────────────
+function showHomeMessage(msg) {
+  const hs = $('homeScreen');
+  if (!hs.classList.contains('active')) {
+    hs.classList.add('active');
+    $('homeMomAv').style.backgroundImage = `url('project/mama.png')`;
+    $('homeDadAv').style.backgroundImage = `url('project/baba.png')`;
+    $('chatArea').parentElement.querySelector('.nav-bar').style.display = 'none';
+    $('chatArea').style.display = 'none';
+    $('optArea').style.display = 'none';
+    document.querySelector('.health-wrap').style.display = 'none';
+  }
+
+  // Switch background if node specifies one
+  if (msg.bg) {
+    hs.style.background =
+      `linear-gradient(rgba(240,235,227,0.65), rgba(232,224,212,0.7)), url('${msg.bg}') center/cover no-repeat`;
+  }
+
+  // Highlight speaking character
+  $('homeCharMom').classList.toggle('speaking', msg.who === 'mom');
+  $('homeCharDad').classList.toggle('speaking', msg.who === 'dad');
+
+  const dlg = $('homeDlg');
+  const speaker = $('homeSpeaker');
+  const text = $('homeText');
+
+  if (msg.who && C[msg.who]) {
+    dlg.classList.remove('narration');
+    speaker.textContent = C[msg.who].name;
+    speaker.style.display = 'block';
+  } else {
+    dlg.classList.add('narration');
+    speaker.style.display = 'none';
+  }
+  text.innerHTML = msg.text.replace(/\n/g, '<br>');
+
+  const optArea = $('homeOptArea');
+  optArea.innerHTML = '';
+  if (msg.opts) {
+    msg.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt.t;
+      btn.onclick = () => pickHome(opt, i, msg.opts);
+      optArea.appendChild(btn);
+    });
+  }
+}
+
+function pickHome(opt, idx, allOpts) {
+  if (S.waiting) return;
+  S.waiting = true;
+  $('homeOptArea').querySelectorAll('.opt-btn').forEach((b, i) => {
+    b.className = 'opt-btn ' + (i === idx ? 'chosen' : 'disabled');
+  });
+
+  const dmg = opt.dmg || 0;
+  if (opt.attitude && S.att[opt.attitude] !== undefined) S.att[opt.attitude]++;
+
+  $('homeDlg').classList.remove('narration');
+  $('homeSpeaker').textContent = '你';
+  $('homeSpeaker').style.display = 'block';
+  $('homeText').textContent = opt.t;
+
+  if (opt.reaction) {
+    setTimeout(() => {
+      $('homeSpeaker').textContent = C[opt.reaction.who].name;
+      $('homeText').textContent = opt.reaction.text;
+      $('homeCharMom').classList.toggle('speaking', opt.reaction.who === 'mom');
+      $('homeCharDad').classList.toggle('speaking', opt.reaction.who === 'dad');
+    }, 800);
+  }
+  if (opt.note) setTimeout(() => addSys(opt.note), 400);
+  if (opt.restore) setTimeout(() => setHP(S.hp + opt.restore), 500);
+
+  S.nodeId = opt.next || null;
+  S.done++;
+
+  const delay = opt.reaction ? 1500 : 700;
+  if (dmg > 0) {
+    setTimeout(() => {
+      setHP(S.hp - dmg);
+      if (S.hp <= 0) { S.bdRound = 4; setTimeout(() => endGame('breakdown'), 900); return; }
+      scheduleNext();
+    }, delay);
+  } else {
+    setTimeout(() => scheduleNext(), delay);
+  }
+}
+
+function exitHomeScene() {
+  S.scene = 'chat';
+  $('homeScreen').classList.remove('active');
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = '';
+  $('chatArea').style.display = '';
+  $('optArea').style.display = '';
+  document.querySelector('.health-wrap').style.display = '';
+}
+
+function exitDateScene() {
+  S.scene = 'chat';
+  $('dateScreen').classList.remove('active');
+  // Restore group chat UI
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = '';
+  $('chatArea').style.display = '';
+  $('optArea').style.display = '';
+  document.querySelector('.health-wrap').style.display = '';
+}
+
+function copyResult(key, hp, rounds, msgs) {
+  const e = ENDINGS[key];
+  const text =
+    `我在《家庭群聊求生指南》中——\n` +
+    `${e.share}\n` +
+    `心理防线剩余：${hp}%\n` +
+    `撑过了 ${rounds} 轮 ${msgs} 条消息\n` +
+    `你能比我撑得久吗？`;
+
+  const btn = $('copyBtn');
+  const succeed = () => {
+    btn.textContent = '✓ 已复制！';
+    btn.style.background = '#4caf50';
+    setTimeout(() => {
+      btn.textContent = '复制结果分享';
+      btn.style.background = '#07c160';
+    }, 2200);
+  };
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(succeed).catch(() => fallbackCopy(text, succeed));
+  } else {
+    fallbackCopy(text, succeed);
+  }
+}
+
+function fallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); cb(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function dismissModal() {
+  $('endModal').style.display = 'none';
+  $('resultFab').style.display = 'block';
+}
+
+window.showResultModal = function() {
+  $('endModal').style.display = 'flex';
+  $('resultFab').style.display = 'none';
+};
+
+function retryGame() {
+  $('endModal').style.display = 'none';
+  $('resultFab').style.display = 'none';
+  startGame();
+}
+
+// ─────────────────────────────────────────
+// START
+// ─────────────────────────────────────────
+function startGame() {
+  $('startScreen').style.display = 'none';
+  hideScreens();
+  $('dateScreen').classList.remove('active');
+  $('callScreen').classList.remove('active');
+  $('homeScreen').classList.remove('active');
+  if (typeof callTimerInterval !== 'undefined' && callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
+  // Restore group chat UI in case we came from scene
+  $('chatArea').parentElement.querySelector('.nav-bar').style.display = '';
+  $('chatArea').style.display = '';
+  $('optArea').style.display = '';
+  document.querySelector('.health-wrap').style.display = '';
+  resetState();
+  if (typeof callDeclineCount !== 'undefined') callDeclineCount = 0;
+  setHP(100);
+  $('chatArea').innerHTML = '<div class="system-msg">以下是「家庭群」的聊天记录</div>';
+  $('optArea').innerHTML = '';
+  advance();
+}
+
+</script>
+</body>
+</html>
